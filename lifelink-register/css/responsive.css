@@ -1,0 +1,27 @@
+@media (max-width: 1100px) {
+  .intro-panel { padding-inline: 35px; }
+  .brand { left: 35px; }
+  .intro-content h1 { font-size: 35px; }
+  .intro-content p { font-size: 14px; }
+  .auth-panel { padding-top: 110px; }
+}
+@media (max-width: 760px) {
+  .page { grid-template-columns: 1fr; }
+  .intro-panel { min-height: 230px; padding: 95px 26px 26px; }
+  .brand { top: 28px; left: 26px; }
+  .intro-content h1 { font-size: 30px; margin-bottom: 10px; }
+  .intro-content h1 br { display: none; }
+  .intro-content p { font-size: 13px; line-height: 1.5; }
+  .trust-list { margin-top: 14px; }
+  .auth-panel { padding: 34px 22px 55px; }
+}
+@media (max-width: 420px) {
+  #form-title { font-size: 25px; }
+  .role-grid { gap: 6px; }
+  .role-card { padding: 0 8px; }
+  .role-card strong { font-size: 12px; }
+  .role-card small { font-size: 10px; }
+  .field-row { gap: 9px; }
+  .field input, .field select { padding-inline: 9px; font-size: 12px; }
+  .trust-list span { font-size: 10px; }
+}

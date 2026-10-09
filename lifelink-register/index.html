@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register | LifeLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/form.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/validation.js" defer></script>
+  <script src="js/register.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <aside class="intro-panel">
+      <a class="brand" href="index.html" aria-label="LifeLink home">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2.2C9.6 6.1 5.3 10.2 5.3 14.3a6.7 6.7 0 0 0 13.4 0C18.7 10.2 14.4 6.1 12 2.2Z"/>
+          <path d="M12 10.3v7M8.5 13.8h7"/>
+        </svg>
+        <span>LifeLink</span>
+      </a>
+      <div class="intro-content">
+        <h1>One account for <br>patients, donors <br>and hospitals.</h1>
+        <p>Your role decides what you see: patients reserve beds and request blood, donors get matched alerts, hospitals update availability for everyone in real time.</p>
+        <div class="trust-list" aria-label="Security features">
+          <span>JWT secured</span>
+          <span>Bcrypt passwords</span>
+          <span>Role-based access</span>
+        </div>
+      </div>
+    </aside>
+    <section class="auth-panel" aria-labelledby="form-title">
+      <div class="auth-content">
+        <div class="auth-tabs" role="tablist" aria-label="Account action">
+          <button id="login-tab" class="auth-tab" type="button" role="tab" aria-selected="false">Log in</button>
+          <button id="register-tab" class="auth-tab active" type="button" role="tab" aria-selected="true">Register</button>
+        </div>
+        <h2 id="form-title">Create your account</h2>
+        <form id="account-form" novalidate>
+          <fieldset class="role-section">
+            <legend>I am a</legend>
+            <div class="role-grid">
+              <label class="role-card">
+                <input type="radio" name="role" value="patient">
+                <strong>Patient</strong><small>Beds &amp; blood</small>
+              </label>
+              <label class="role-card">
+                <input type="radio" name="role" value="donor" checked>
+                <strong>Donor</strong><small>Give blood</small>
+              </label>
+              <label class="role-card">
+                <input type="radio" name="role" value="hospital">
+                <strong>Hospital</strong><small>Manage beds</small>
+              </label>
+            </div>
+          </fieldset>
+          <div class="field-row" id="identity-fields">
+            <label class="field"> <span id="name-label">Full name</span>
+              <input id="full-name" name="fullName" type="text" autocomplete="name">
+            </label>
+            <label class="field"> <span>Phone</span>
+              <input id="phone" name="phone" type="tel" placeholder="01XXXXXXXXX" inputmode="numeric" autocomplete="tel">
+            </label>
+          </div>
+          <label class="field email-field"> <span>Email</span>
+            <input id="email" name="email" type="email" autocomplete="email">
+          </label>
+          <div class="field-row" id="medical-fields">
+            <label class="field" id="blood-field"> <span>Blood group</span>
+              <select id="blood-group" name="bloodGroup">
+                <option>A+</option><option>A-</option><option selected>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+              </select>
+            </label>
+            <label class="field" id="donated-field"> <span>Last donated</span>
+              <input id="last-donated" name="lastDonated" type="date">
+            </label>
+          </div>
+          <label class="field password-field"> <span>Password</span>
+            <input id="password" name="password" type="password" autocomplete="new-password">
+          </label>
+          <button class="submit-button" id="submit-button" type="submit">Create account</button>
+          <p class="form-message" id="form-message" role="status" aria-live="polite" hidden></p>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

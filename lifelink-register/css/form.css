@@ -1,0 +1,92 @@
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 4px;
+  height: 58px;
+  border-radius: 12px;
+  background: var(--tab-bg);
+}
+.auth-tab {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #526071;
+  font-size: 14px;
+  font-weight: 600;
+}
+.auth-tab.active {
+  background: white;
+  color: var(--dark);
+  box-shadow: 0 2px 6px #2f24181a;
+}
+#form-title {
+  margin: 24px 0 17px;
+  font-size: 34px;
+  line-height: 1.25;
+  letter-spacing: -0.8px;
+  font-weight: 800;
+}
+.role-section { border: 0; padding: 0; margin: 0 0 19px; min-width: 0; }
+.role-section legend, .field > span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.role-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  min-width: 0;
+  height: 71px;
+  padding: 0 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+}
+.role-card:has(input:checked) {
+  background: #fff6f4;
+  border: 2px solid var(--red-border);
+}
+.role-card input { position: absolute; opacity: 0; pointer-events: none; }
+.role-card:has(input:focus-visible) { outline: 3px solid #e97869; outline-offset: 2px; }
+.role-card strong { font-size: 15px; font-weight: 700; line-height: 1.4; }
+.role-card small { color: #7a828d; font-size: 13px; line-height: 1.5; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.field { display: flex; flex-direction: column; min-width: 0; }
+.field input, .field select {
+  width: 100%;
+  height: 49px;
+  padding: 0 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: white;
+  color: var(--dark);
+  font-size: 14px;
+}
+.field input::placeholder { color: #8c8b89; }
+.field select { appearance: auto; }
+.email-field, #medical-fields, .password-field { margin-top: 18px; }
+#medical-fields.single-field { grid-template-columns: 1fr; }
+.submit-button {
+  width: 100%;
+  height: 54px;
+  margin-top: 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--red);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background .15s ease;
+}
+.submit-button:hover { background: #991d15; }
+.form-message { margin: 12px 0 0; font-size: 14px; line-height: 1.5; }
+.form-message.error { color: #b42318; }
+.form-message.success { color: #27643f; }
+.field input.invalid { border-color: #b42318; }
