@@ -1,0 +1,109 @@
+
+.bc-flow-slider {
+  width: 100%;
+  min-width: 0;
+}
+
+.bc-flow-frame {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #f8e7eb;
+}
+
+.bc-flow-frame .bc-flow-photo {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: translateX(16px) scale(1.02);
+  transition: opacity .85s ease-in-out,
+              transform 2.6s ease-out;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+.bc-flow-frame .bc-flow-photo.is-current {
+  opacity: 1;
+  transform: translateX(0) scale(1.075);
+  z-index: 1;
+}
+
+.bc-flow-control {
+  position: absolute;
+  z-index: 3;
+  right: 16px;
+  bottom: 16px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #ffffffaa;
+  border-radius: 50%;
+  color: white;
+  background: #231a2799;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(7px);
+  transition: background .2s, transform .2s;
+}
+
+.bc-flow-control:hover {
+  background: #d60937;
+  transform: scale(1.08);
+}
+
+.bc-flow-caption {
+  margin: 13px 3px 0;
+  min-height: 62px;
+  animation: bc-flow-caption-in .55s ease both;
+}
+
+.bc-flow-caption strong {
+  display: block;
+  color: #d60937;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.015em;
+  line-height: 1.4;
+}
+
+.bc-flow-caption p {
+  margin: 4px 0 0;
+  color: #677388;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@keyframes bc-flow-caption-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .bc-flow-frame { border-radius: 18px; }
+  .bc-flow-caption { min-height: 75px; }
+  .bc-flow-caption strong { font-size: 14px; }
+  .bc-flow-caption p { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bc-flow-photo,
+  .bc-flow-caption,
+  .bc-flow-control {
+    animation: none !important;
+    transition: none !important;
+  }
+  .bc-flow-frame .bc-flow-photo.is-current {
+    transform: none;
+  }
+}

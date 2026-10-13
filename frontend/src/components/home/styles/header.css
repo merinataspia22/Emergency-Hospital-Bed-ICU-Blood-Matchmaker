@@ -1,0 +1,30 @@
+.bc-site-header{position:sticky;top:0;z-index:50;background:#ffffffeb;backdrop-filter:blur(20px);
+  border-bottom:1px solid #e5e1e485;box-shadow:0 4px 40px #29102208}
+.bc-header-inner{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.bc-logo-link{flex-shrink:0}
+.bc-brand{font-size:23px;font-weight:820;display:inline-flex;align-items:center;gap:8px;letter-spacing:-1px;line-height:1}
+.bc-brand b{color:var(--bc-red)}
+.bc-brand-mark{display:grid;place-items:center;color:var(--bc-red);position:relative;width:34px;height:38px}
+.bc-brand-mark svg{width:32px;height:32px;fill:var(--bc-red);stroke:var(--bc-red)}
+.bc-brand-spot{position:absolute;bottom:10px;left:14px;background:white;border-radius:50%;width:7px;height:12px;transform:rotate(22deg)}
+.bc-header-nav{display:flex;align-items:center;gap:26px}
+.bc-header-nav>a,.bc-header-nav>button{position:relative;color:#374052;font-size:12.5px;font-weight:650;
+  padding:10px 0;background:none;border:0;white-space:nowrap}
+.bc-header-nav>a::after,.bc-header-nav>button::after{content:'';position:absolute;left:0;bottom:4px;
+  width:0;height:2px;background:var(--bc-red);transition:width .25s}
+.bc-header-nav>a:hover,.bc-header-nav>button:hover,.bc-header-nav .is-active{color:var(--bc-red)}
+.bc-header-nav>a:hover::after,.bc-header-nav>button:hover::after,.bc-header-nav .is-active::after{width:100%}
+.bc-header-actions{display:flex;gap:10px;align-items:center}
+.bc-icon-button{width:37px;height:37px;background:#fff;border:1px solid #e7e6e8;
+  border-radius:50%;display:grid;place-items:center;color:#1d2737}
+.bc-icon-button:hover{background:var(--bc-rose);border-color:#f2b9c3}
+.bc-head-login{font-size:12px;font-weight:750;border:1px solid #edd2d8;border-radius:9px;
+  padding:8px 15px;color:var(--bc-red)!important}
+.bc-head-login:hover{background:#fff5f6}
+.bc-menu-button,.bc-mobile-auth{display:none!important}
+.bc-header-search{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding-bottom:18px}
+.bc-header-search label{font-size:12px;font-weight:700}
+.bc-header-search input{flex:1;border:1px solid #eadadd;border-radius:9px;padding:9px 13px;min-width:0}
+.bc-header-search .bc-button{border:0}
+
+.bc-search-hint{font-size:11px;color:#b21137;width:100%}
