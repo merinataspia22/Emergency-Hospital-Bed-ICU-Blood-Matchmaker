@@ -58,10 +58,11 @@ export default function App() {
           path="/dashboard"
           element={<RecipientDashboard />}
         />
-          <Route
+        <Route
           path="/donor-dashboard"
           element={<DonorDashboard />}
-          />
+         />
+        
         <Route
           path="/bloodbank-dashboard"
           element={<BloodBankDashboard />}
@@ -76,6 +77,7 @@ export default function App() {
           path="/hospital-beds"
           element={<HospitalBeds />}
         />
+        
         <Route
           path="/find-donor"
           element={<FindDonor />}
