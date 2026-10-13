@@ -1,0 +1,25 @@
+@keyframes shimmer {
+  from {
+    transform: translateX(-130%);
+  }
+  to {
+    transform: translateX(170%);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

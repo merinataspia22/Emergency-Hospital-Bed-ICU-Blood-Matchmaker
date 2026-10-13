@@ -1,0 +1,9 @@
+.login-hint {
+  color: #526078;
+  font-size: 11px;
+  text-align: center;
+  margin: 9px 0 0;
+}
+.login-hint .text-link {
+  margin-left: 4px;
+}

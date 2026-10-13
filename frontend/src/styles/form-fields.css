@@ -1,0 +1,108 @@
+.field-error {
+  display: block;
+  color: #c8001d;
+  font-size: 10.3px;
+  line-height: 1.28;
+  margin-top: 3px;
+}
+.has-error .input-wrap input, .has-error .input-wrap select {
+  border-color: #e33a4c;
+}
+.password-strength {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 7px;
+  color: #718096;
+  margin: 6px 0 -3px;
+  font-size: 10px;
+}
+.strength-bars {
+  display: flex;
+  gap: 3px;
+}
+.strength-bars i {
+  width: 23px;
+  height: 3px;
+  border-radius: 4px;
+  background: #e3e6eb;
+}
+.strength-bars i.active.level-1 {
+  background: #dd3042;
+}
+.strength-bars i.active.level-2 {
+  background: #ed9c31;
+}
+.strength-bars i.active.level-3 {
+  background: #16a36b;
+}
+.terms-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin: 10px 0 7px;
+  font-size: 11.5px;
+  color: #324055;
+}
+.terms-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.terms-label input {
+  margin: 0 2px 0 0;
+  width: 17px;
+  height: 17px;
+  accent-color: #e50020;
+  cursor: pointer;
+}
+.text-link {
+  border: 0;
+  background: transparent;
+  color: #e2001c;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 680;
+}
+.text-link:hover {
+  text-decoration: underline;
+}
+.terms-error {
+  margin: -3px 0 5px;
+}
+.submit-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  width: 100%;
+  height: 39px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(100deg, #eb0924, #d8001a);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 740;
+  box-shadow: 0 5px 12px #ed092113;
+  transition: transform .22s, box-shadow .22s;
+}
+.submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px #d9002344;
+}
+.submit-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent, #ffffff38, transparent);
+  transform: translateX(-130%);
+}
+.submit-button:hover::after {
+  animation: shimmer .8s ease;
+}

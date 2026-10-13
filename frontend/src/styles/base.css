@@ -1,0 +1,106 @@
+:root {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #11131a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button, input, select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid #ff7681;
+  outline-offset: 2px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+.page-backdrop {
+  min-height: 100vh;
+  padding: clamp(24px, 5vw, 58px) 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 10%, #d6dde9 0%, #edf0f6 60%, #e7ebf3 100%);
+}
+.site-shell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1300px);
+  min-height: 680px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(110deg, #fff 32%, #fff4f4 65%, #ffedf0 100%);
+  box-shadow: 0 24px 75px #34456224, 0 2px 9px #a9b2c735;
+  animation: shell-entrance .65s ease-out both;
+}
+.page-content {
+  display: grid;
+  grid-template-columns: 1.02fr 1fr;
+  gap: 13px;
+  padding: 10px 18px 13px;
+  min-height: 607px;
+}
+.background-orb {
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(4px);
+  animation: blob 15s ease-in-out infinite alternate;
+}
+.orb-a {
+  background: #f3aab066;
+  width: 420px;
+  height: 420px;
+  top: -180px;
+  right: -140px;
+}
+.orb-b {
+  background: #ced7f888;
+  width: 380px;
+  height: 380px;
+  left: -100px;
+  bottom: -210px;
+  animation-delay: -6s;
+}
+@keyframes shell-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(19px) scale(.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes blob {
+  to {
+    transform: translate(50px, 45px) scale(1.13);
+  }
+}
+@keyframes float-up {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
