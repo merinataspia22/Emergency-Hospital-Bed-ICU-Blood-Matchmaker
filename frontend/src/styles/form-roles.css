@@ -1,0 +1,107 @@
+.role-symbol {
+  color: #de0b25;
+  background: #fff0f0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.role-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow: hidden;
+}
+.role-copy strong {
+  font-size: 12px;
+  letter-spacing: -.2px;
+  white-space: nowrap;
+}
+.role-copy small {
+  color: #647087;
+  font-size: 10.5px;
+  white-space: nowrap;
+}
+.fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px 12px;
+}
+.field {
+  min-width: 0;
+}
+.field > label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 740;
+  margin: 0 0 4px;
+}
+.input-wrap {
+  position: relative;
+  height: 34px;
+}
+.input-wrap input, .input-wrap select {
+  width: 100%;
+  height: 100%;
+  color: #182333;
+  background: #fff;
+  border: 1px solid #d9e0e9;
+  border-radius: 7px;
+  padding: 0 32px 0 36px;
+  font-size: 11.5px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.input-wrap input::placeholder {
+  color: #8190a5;
+  opacity: 1;
+}
+.input-wrap input:focus, .input-wrap select:focus {
+  border-color: #e5142c;
+  background: #fffdfd;
+  box-shadow: 0 0 0 3px #fce7ea;
+}
+.input-wrap select {
+  appearance: none;
+  cursor: pointer;
+}
+.input-wrap select:invalid {
+  color: #8090a6;
+}
+.input-wrap select option {
+  color: #182333;
+}
+.field-icon {
+  position: absolute;
+  z-index: 1;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #66758c;
+  pointer-events: none;
+}
+.field-action {
+  position: absolute;
+  right: 7px;
+  top: 4px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #344256;
+}
+.field-action:hover {
+  color: #d20921;
+}
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #4f5c71;
+  pointer-events: none;
+}

@@ -1,28 +1,86 @@
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// Home, Login and Registration
+import HomePage from "./components/home/HomePage";
+import LoginPage from "./pages/Login/LoginPage";
+import RegistrationPage from "./pages/Registration/RegistrationPage";
+
+// Team Components
 import RequestBlood from "./components/RequestBlood";
 import RecipientDashboard from "./components/RecipientDashboard";
-<<<<<<< HEAD
-import AdminDashboard from "./components/AdminDashboard";
-import HospitalBeds from "./components/HospitalBeds.jsx";
-=======
 import BloodBankDashboard from "./components/BloodBankDashboard";
->>>>>>> 3dd291bbfad945879d75f9d98258d8782e6e5163
+import AdminDashboard from "./components/AdminDashboard";
+import HospitalBeds from "./components/HospitalBeds";
+
+// Login and Registration Styles
+import "./styles/bc-auth.css";
+
+function ComingSoon({ title }) {
+  return (
+    <main
+      style={{
+        minHeight: "80vh",
+        display: "grid",
+        placeItems: "center",
+        textAlign: "center",
+        padding: "30px"
+      }}
+    >
+      <div>
+        <h1>{title}</h1>
+        <p>This page is being developed by our team.</p>
+      </div>
+    </main>
+  );
+}
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/request-blood" replace />} />
-        <Route path="/request-blood" element={<RequestBlood />} />
-        <Route path="/dashboard" element={<RecipientDashboard />} />
-<<<<<<< HEAD
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/hospital-beds" element={<HospitalBeds />} />
-=======
-        <Route path="/bloodbank-dashboard" element={<BloodBankDashboard />} />
->>>>>>> 3dd291bbfad945879d75f9d98258d8782e6e5163
-        {/* unknown url hole request-blood e pathabe */}
-        <Route path="*" element={<Navigate to="/request-blood" replace />} />
+        {/* Home, Login and Registration */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegistrationPage />} />
+
+        {/* Team Pages */}
+        <Route
+          path="/request-blood"
+          element={<RequestBlood />}
+        />
+
+        <Route
+          path="/dashboard"
+          element={<RecipientDashboard />}
+        />
+
+        <Route
+          path="/bloodbank-dashboard"
+          element={<BloodBankDashboard />}
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
+        />
+
+        <Route
+          path="/hospital-beds"
+          element={<HospitalBeds />}
+        />
+
+        {/* Future Find Donor Page */}
+        <Route
+          path="/find-donor"
+          element={<ComingSoon title="Find Donor" />}
+        />
+
+        {/* Unknown URL redirects to Home */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
       </Routes>
     </BrowserRouter>
   );

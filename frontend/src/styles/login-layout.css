@@ -1,0 +1,21 @@
+.bc-login-page { min-height:100vh; padding:clamp(22px,5vh,65px) 22px; display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 20% 10%,#f9e2e7 0,#edf0f7 55%,#e1e7f2 100%); position:relative; isolation:isolate; overflow:hidden; }
+.bc-login-page .bc-deco { position:absolute; pointer-events:none; z-index:-1; border-radius:50%; filter:blur(3px); }
+.bc-deco-one { width:360px; height:360px; left:-160px; top:-130px; background:#fda9b555; animation:bc-orb 14s ease-in-out infinite alternate; }
+.bc-deco-two { width:420px; height:420px; right:-190px; bottom:-170px; background:#e49da966; animation:bc-orb 18s ease-in-out infinite alternate-reverse; }
+.bc-login-shell { display:grid; grid-template-columns:1fr 1.04fr; width:min(100%,1264px); min-height:665px; border-radius:26px;
+  background:#fff; box-shadow:0 22px 70px #4c3c582a,0 2px 18px #35445a12; overflow:hidden; animation:bc-rise .8s cubic-bezier(.2,.8,.2,1) both; }
+.bc-form-panel { padding:clamp(29px,3vw,55px) clamp(30px,4vw,66px) 20px; display:flex; flex-direction:column; background:#fff; min-width:0; }
+.bc-brand { display:flex; align-items:center; width:max-content; max-width:100%; text-decoration:none; font-size:clamp(24px,2.5vw,33px); font-weight:850;
+  line-height:1; letter-spacing:-1.5px; transition:transform .25s; }
+.bc-brand:hover { transform:translateY(-2px); }
+.bc-brand-icon { color:#df061f; display:inline-flex; margin-right:7px; filter:drop-shadow(0 3px 2px #df062121); }
+.bc-brand-blood { color:#e00620; } .bc-brand-connect { color:#0d101a; }
+.bc-form-content { margin-top:clamp(29px,3.5vw,49px); }
+.bc-top-caption { margin:0 0 6px; color:#a72a3c; text-transform:uppercase; font-size:10px; font-weight:800; letter-spacing:1.6px; }
+.bc-live-dot { display:inline-block; height:7px; width:7px; border-radius:50%; background:#ee1935; box-shadow:0 0 0 4px #ffe8ea; margin-right:8px; animation:bc-pulse 2.5s infinite; }
+.bc-form-content h1 { font-size:clamp(32px,3.4vw,47px); line-height:1.06; font-weight:850; letter-spacing:-2px; margin:0 0 9px; color:#090b12; }
+.bc-intro { color:#53627a; font-size:clamp(15px,1.3vw,18px); line-height:1.48; margin:0 0 24px; }
+@keyframes bc-rise { from { opacity:0; transform:translateY(22px) scale(.985) } to { opacity:1; transform:translateY(0) scale(1) } }
+@keyframes bc-orb { to { transform:translate(80px,30px) scale(1.2); } }
+@keyframes bc-pulse { 50% { box-shadow:0 0 0 7px #ffd5dc; } }

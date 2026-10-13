@@ -1,0 +1,34 @@
+.bc-field { margin-bottom:15px; min-width:0; }
+.bc-field > label { display:block; font-size:14px; font-weight:750; color:#121722; margin-bottom:8px; }
+.bc-input-box { height:49px; display:flex; align-items:center; gap:13px; padding:0 15px; border:1.5px solid #dce2ed; border-radius:11px;
+  color:#5b6a83; background:#fff; transition:border .2s,box-shadow .2s,transform .2s; }
+.bc-input-box:focus-within { border-color:#ef2442; box-shadow:0 0 0 4px #ff1b3720; transform:translateY(-1px); }
+.bc-input-box.bc-invalid { border-color:#df2542; background:#fff7f8; }
+.bc-input-box input { border:0; width:100%; min-width:0; outline:0; background:transparent; font-size:14px; color:#151c29; }
+.bc-input-box input::placeholder { color:#8290a6; opacity:1; }
+.bc-show-pw { flex-shrink:0; border:0; background:transparent; padding:3px; color:#233044; display:grid; place-items:center; }
+.bc-show-pw:hover { color:#d60926; }
+.bc-error { color:#c81f3c; font-size:11px; line-height:1.3; margin:5px 0 0; }
+.bc-form-options { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:2px 0 19px; font-size:13px; }
+.bc-remember { display:flex; align-items:center; gap:9px; color:#44516a; cursor:pointer; }
+.bc-remember input { accent-color:#df0b27; width:17px; height:17px; margin:0; cursor:pointer; }
+.bc-link { border:0; background:transparent; color:#e00724; padding:0; font-size:13px; font-weight:700; }
+.bc-link:hover,.bc-signup-text a:hover { text-decoration:underline; }
+.bc-login-submit { width:100%; height:49px; border:0; border-radius:11px; display:flex; align-items:center; justify-content:center; gap:11px;
+  background:linear-gradient(110deg,#ed0b28,#d80824); color:#fff; font-size:17px; font-weight:750;
+  box-shadow:0 10px 22px #e1052840; transition:transform .2s,box-shadow .2s,filter .2s; position:relative; overflow:hidden; }
+.bc-login-submit:before { content:''; position:absolute; width:40%; height:180%; top:-45%; left:-60%; transform:rotate(22deg); background:#ffffff37; transition:left .65s; }
+.bc-login-submit:hover:before { left:135%; }
+.bc-login-submit:hover { transform:translateY(-2px); box-shadow:0 13px 27px #df0e3254; filter:saturate(1.08); }
+.bc-login-submit:active { transform:translateY(0); }
+.bc-social-divider { display:flex; align-items:center; gap:13px; color:#65728a; font-size:13px; margin:25px 0 17px; white-space:nowrap; }
+.bc-social-divider:before,.bc-social-divider:after { content:''; height:1px; flex:1; background:#d8dfeb; }
+.bc-social-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.bc-social-btn { height:48px; border-radius:10px; border:1.5px solid #dce2ed; background:#fff; color:#222735; font-size:12px;
+  display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .2s,border .2s,background .2s; }
+.bc-social-btn:hover { border-color:#efadb5; transform:translateY(-2px); background:#fff9fa; }
+.bc-google-g { font-size:24px; font-weight:900; font-family:Arial,sans-serif; background:conic-gradient(#4285f4 0 90deg,#34a853 90deg 175deg,#fbbc05 175deg 235deg,#ea4335 235deg);
+  background-clip:text; -webkit-background-clip:text; color:transparent; }
+.bc-signup-text { text-align:center; color:#536178; font-size:13px; margin:24px 0 9px; }
+.bc-signup-text a { text-decoration:none; color:#e00624; font-weight:750; }
+.bc-demo-caption { color:#8a91a2; font-size:10px; margin:0; text-align:center; line-height:1.4; }

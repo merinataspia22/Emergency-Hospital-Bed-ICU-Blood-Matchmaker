@@ -1,0 +1,32 @@
+@media (min-width:1400px) { .bc-login-shell { min-height:685px; } }
+@media (max-width:1000px) {
+  .bc-login-shell { grid-template-columns:1fr 1fr; min-height:620px; }
+  .bc-form-panel { padding:33px 30px 26px; }
+  .bc-form-content { margin-top:30px; }
+  .bc-art-bottom { padding:8px 30px 28px; }
+  .bc-slide h2 { font-size:37px; }
+  .bc-social-row { gap:7px; }
+  .bc-social-btn { font-size:11px; gap:4px; }
+}
+@media (max-width:720px) {
+  .bc-login-page { padding:20px 12px; align-items:flex-start; }
+  .bc-login-shell { display:flex; flex-direction:column; max-width:560px; min-height:0; border-radius:20px; }
+  .bc-form-panel { padding:31px 27px 34px; }
+  .bc-form-content { margin-top:29px; }
+  .bc-art-panel { min-height:540px; }
+  .bc-art-picture { height:320px; min-height:320px; }
+  .bc-art-bottom { padding:0 28px 28px; }
+  .bc-slide h2 { font-size:36px; }
+  .bc-slide p { min-height:0; }
+}
+@media (max-width:390px) {
+  .bc-form-panel { padding:25px 19px 25px; }
+  .bc-brand { font-size:26px; } .bc-brand-icon svg { width:37px; }
+  .bc-form-content h1 { font-size:34px; }
+  .bc-social-row { grid-template-columns:1fr; }
+  .bc-social-btn { font-size:13px; }
+  .bc-form-options { font-size:12px; }
+  .bc-link { font-size:12px; }
+  .bc-art-panel { min-height:525px; }
+}
+@media (prefers-reduced-motion:reduce) { .bc-login-page * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
