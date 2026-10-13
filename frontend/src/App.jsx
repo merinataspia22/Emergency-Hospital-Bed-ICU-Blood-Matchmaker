@@ -1,8 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RequestBlood from "./components/RequestBlood";
 import RecipientDashboard from "./components/RecipientDashboard";
+<<<<<<< HEAD
 import AdminDashboard from "./components/AdminDashboard";
 import HospitalBeds from "./components/HospitalBeds.jsx";
+=======
+import BloodBankDashboard from "./components/BloodBankDashboard";
+>>>>>>> 3dd291bbfad945879d75f9d98258d8782e6e5163
 
 export default function App() {
   return (
@@ -11,8 +15,12 @@ export default function App() {
         <Route path="/" element={<Navigate to="/request-blood" replace />} />
         <Route path="/request-blood" element={<RequestBlood />} />
         <Route path="/dashboard" element={<RecipientDashboard />} />
+<<<<<<< HEAD
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/hospital-beds" element={<HospitalBeds />} />
+=======
+        <Route path="/bloodbank-dashboard" element={<BloodBankDashboard />} />
+>>>>>>> 3dd291bbfad945879d75f9d98258d8782e6e5163
         {/* unknown url hole request-blood e pathabe */}
         <Route path="*" element={<Navigate to="/request-blood" replace />} />
       </Routes>
