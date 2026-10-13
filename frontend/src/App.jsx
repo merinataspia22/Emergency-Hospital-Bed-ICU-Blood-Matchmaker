@@ -11,7 +11,11 @@ import RequestBlood from "./components/RequestBlood";
 import RecipientDashboard from "./components/RecipientDashboard";
 import BloodBankDashboard from "./components/BloodBankDashboard";
 import AdminDashboard from "./components/AdminDashboard";
+import FindDonor from "./components/FindDonor";
 import HospitalBeds from "./components/HospitalBeds";
+import DonorDashboard from "./components/DonorDashboard";
+import BloodBankDashboard from "./components/BloodBankDashboard";
+
 
 // Login and Registration Styles
 import "./styles/bc-auth.css";
@@ -54,7 +58,10 @@ export default function App() {
           path="/dashboard"
           element={<RecipientDashboard />}
         />
-
+          <Route
+          path="/donor-dashboard"
+          element={<DonorDashboard />}
+          />
         <Route
           path="/bloodbank-dashboard"
           element={<BloodBankDashboard />}
@@ -69,11 +76,9 @@ export default function App() {
           path="/hospital-beds"
           element={<HospitalBeds />}
         />
-
-        {/* Future Find Donor Page */}
         <Route
           path="/find-donor"
-          element={<ComingSoon title="Find Donor" />}
+          element={<FindDonor />}
         />
 
         {/* Unknown URL redirects to Home */}
