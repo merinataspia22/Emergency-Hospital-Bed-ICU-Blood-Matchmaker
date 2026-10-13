@@ -9,7 +9,6 @@ import RegistrationPage from "./pages/Registration/RegistrationPage";
 // Team Components
 import RequestBlood from "./components/RequestBlood";
 import RecipientDashboard from "./components/RecipientDashboard";
-import BloodBankDashboard from "./components/BloodBankDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import FindDonor from "./components/FindDonor";
 import HospitalBeds from "./components/HospitalBeds";
