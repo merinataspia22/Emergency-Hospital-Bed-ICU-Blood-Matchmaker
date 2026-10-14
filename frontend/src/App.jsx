@@ -15,28 +15,8 @@ import HospitalBeds from "./components/HospitalBeds";
 import DonorDashboard from "./components/DonorDashboard";
 import BloodBankDashboard from "./components/BloodBankDashboard";
 
-
 // Login and Registration Styles
 import "./styles/bc-auth.css";
-
-function ComingSoon({ title }) {
-  return (
-    <main
-      style={{
-        minHeight: "80vh",
-        display: "grid",
-        placeItems: "center",
-        textAlign: "center",
-        padding: "30px"
-      }}
-    >
-      <div>
-        <h1>{title}</h1>
-        <p>This page is being developed by our team.</p>
-      </div>
-    </main>
-  );
-}
 
 export default function App() {
   return (
@@ -47,42 +27,45 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegistrationPage />} />
 
-        {/* Team Pages */}
+        {/* Request Blood */}
         <Route
           path="/request-blood"
           element={<RequestBlood />}
         />
 
+        {/* Dashboards */}
         <Route
           path="/dashboard"
           element={<RecipientDashboard />}
         />
         <Route
+          path="/recipient-dashboard"
+          element={<RecipientDashboard />}
+        />
+        <Route
           path="/donor-dashboard"
           element={<DonorDashboard />}
-         />
-        
+        />
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
+        />
         <Route
           path="/bloodbank-dashboard"
           element={<BloodBankDashboard />}
         />
 
-        <Route
-          path="/admin-dashboard"
-          element={<AdminDashboard />}
-        />
-
+        {/* Other Pages */}
         <Route
           path="/hospital-beds"
           element={<HospitalBeds />}
         />
-        
         <Route
           path="/find-donor"
           element={<FindDonor />}
         />
 
-        {/* Unknown URL redirects to Home */}
+        {/* Unknown URL */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}
