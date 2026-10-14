@@ -1,0 +1,51 @@
+@media (max-width: 530px) {
+  .input-wrap input, .input-wrap select {
+    font-size: 12px;
+  }
+  .terms-row {
+    font-size: 10.7px;
+  }
+  .hero-panel {
+    min-height: 420px;
+  }
+  .hero-art-wrap {
+    height: 265px;
+  }
+  .trust-strip {
+    margin: 0 7px 14px;
+    min-height: 130px;
+  }
+  .trust-item {
+    padding: 3px;
+    gap: 5px;
+  }
+  .trust-item svg {
+    width: 23px;
+  }
+  .trust-item strong {
+    font-size: 8.2px;
+    white-space: normal;
+  }
+  .trust-item span {
+    font-size: 8.3px;
+  }
+}
+
+@media (max-width: 410px) {
+  .role-grid { grid-template-columns: 1fr; }
+  .role-card { min-height: 49px; padding: 6px 11px; }
+  .topbar { gap: 5px; padding: 0 9px; }
+  .brand { font-size: 17px; }
+  .brand-drop svg { width: 26px; }
+  .signup-button { min-width: 58px; font-size: 10px; }
+  .nav-actions { gap: 4px; }
+}
+
+@media (max-width: 410px) {
+  .trust-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trust-item { min-height: 89px; gap: 4px; }
+  .trust-item:nth-child(2) { border-right: 0; }
+  .trust-item:nth-child(-n+2) { border-bottom: 1px solid #e5d8dd; }
+  .trust-item strong { font-size: 11px; }
+  .trust-item span { font-size: 10px; }
+}
