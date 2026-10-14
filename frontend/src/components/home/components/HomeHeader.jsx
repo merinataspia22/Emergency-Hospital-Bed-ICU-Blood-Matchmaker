@@ -22,6 +22,7 @@ const scrollToSection = id => {
     behavior: reducedMotion ? 'auto' : 'smooth', block: 'start',
   });
 };
+export const scrollToHomeSection = scrollToSection;
 
 export default function HomeHeader() {
   const { pathname, hash } = useLocation();
