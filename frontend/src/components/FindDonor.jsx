@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./FindDonor.css";
 
@@ -37,6 +37,22 @@ export default function FindDonor() {
   const [availability, setAvailability] = useState("yes");
   const [sort, setSort] = useState("nearest");
   const [appliedFilters, setAppliedFilters] = useState(null);
+  const [donorAvailable, setDonorAvailable] = useState(() => {
+    const saved = localStorage.getItem("bc_donor_available");
+    return saved === null ? true : saved === "true";
+  });
+  useEffect(() => {
+    const syncAvailability = () => {
+      const saved = localStorage.getItem("bc_donor_available");
+      setDonorAvailable(saved === null ? true : saved === "true");
+    };
+    window.addEventListener("focus", syncAvailability);
+    window.addEventListener("storage", syncAvailability);
+    return () => {
+      window.removeEventListener("focus", syncAvailability);
+      window.removeEventListener("storage", syncAvailability);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     // Match the reference: the initial list shows donors; filters apply after Search Donors.
@@ -47,7 +63,7 @@ export default function FindDonor() {
     if (sort === "nearest") list = [...list].sort((a,b) => a.distance-b.distance);
     if (sort === "group") list = [...list].sort((a,b) => a.group.localeCompare(b.group));
     return f.location === "Chattogram" ? list : [];
-  }, [appliedFilters, sort]);
+  }, [appliedFilters, sort, donorAvailable]);
 
   return <div className="fd-page">
     <header className="fd-navbar">
@@ -77,8 +93,8 @@ export default function FindDonor() {
           {filtered.map(d => <article className="fd-donor-row" key={d.id}>
             <div className="fd-avatar"><img src={d.photo} alt=""/><span><Icon name="check" size={10}/></span></div>
             <div className="fd-donor-info"><div className="fd-donor-name">{d.name}<span className="fd-blood-tag">{d.group}</span></div><p><Icon name="pin" size={13}/>{d.location}</p><p><Icon name="calendar" size={13}/>Last donation: {d.last}</p></div>
-            <span className="fd-status"><i/>Available Now</span>
-            <div className="fd-row-actions"><a href="tel:+8801700000000" aria-label="Call donor"><Icon name="phone" size={18}/></a><a href="mailto:donor@example.com" aria-label="Message donor"><Icon name="message" size={18}/></a><button onClick={()=>window.alert(`Contact ${d.name}`)}>Contact</button></div>
+            <span className={`fd-status ${d.available ? "" : "fd-status-off"}`}><i/>{d.available ? "Available Now" : "Unavailable"}</span>
+            <div className="fd-row-actions"><a href="tel:+8801700000000" aria-label="Call donor"><Icon name="phone" size={18}/></a><a href="mailto:donor@example.com" aria-label="Message donor"><Icon name="message" size={18}/></a><button onClick={()=>{ if (localStorage.getItem("bc_logged_in") !== "true") { window.alert("Please log in to contact a donor."); window.location.href = "/login"; } else { window.location.href = `mailto:donor@example.com?subject=${encodeURIComponent(`BloodConnect contact request for ${d.name}`)}`; } }}>Contact</button></div>
           </article>)}
           {filtered.length === 0 && <div className="fd-empty">No donors found for these filters. Try another blood group or area.</div>}
         </section>
@@ -86,7 +102,7 @@ export default function FindDonor() {
 
       <aside className="fd-side-column">
         <section className="fd-side-card fd-urgent-card"><div className="fd-urgent-top"><span className="fd-side-icon"><Icon name="siren" size={28}/></span><div><h3>Need Urgent Blood?</h3><p>Use filters to find available donors near your location quickly.</p></div></div><div className="fd-emergency"><span className="fd-phone-circle"><Icon name="phone" size={20}/></span><div><small>In a life-threatening situation?</small><strong>Call Emergency: 1664</strong></div></div></section>
-        <section className="fd-side-card fd-map-card"><div className="fd-side-title"><span className="fd-pin-icon"><Icon name="pin" size={25}/></span><h3>Donor Locations</h3><button onClick={()=>window.alert("Donor locations in Chattogram")}>View Map</button></div><div className="fd-map-art"><div className="fd-map-water"/><div className="fd-map-road fd-road-a"/><div className="fd-map-road fd-road-b"/><div className="fd-map-road fd-road-c"/><span className="fd-map-label label-chattogram">Chattogram</span><span className="fd-map-label label-pahartali">Pahartali</span><span className="fd-map-label label-hathazari">Hathazari</span><span className="fd-map-pin pin-a"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-b"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-c"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-d"><Icon name="pin" size={25}/></span><div className="fd-map-popup"><img src={donors[1].photo} alt=""/><span><b>Nafisa Alam</b><small>A+ · Available</small></span></div></div></section>
+        <section className="fd-side-card fd-map-card"><div className="fd-side-title"><span className="fd-pin-icon"><Icon name="pin" size={25}/></span><h3>Donor Locations</h3><button onClick={()=>{setLocation("Chattogram");setArea("All areas");setAppliedFilters({group:"All",location:"Chattogram",area:"All areas",distance:"100",availability:"any"});}}>View Map</button></div><div className="fd-map-art"><div className="fd-map-water"/><div className="fd-map-road fd-road-a"/><div className="fd-map-road fd-road-b"/><div className="fd-map-road fd-road-c"/><span className="fd-map-label label-chattogram">Chattogram</span><span className="fd-map-label label-pahartali">Pahartali</span><span className="fd-map-label label-hathazari">Hathazari</span><span className="fd-map-pin pin-a"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-b"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-c"><Icon name="pin" size={25}/></span><span className="fd-map-pin pin-d"><Icon name="pin" size={25}/></span><div className="fd-map-popup"><img src={donors[1].photo} alt=""/><span><b>Nafisa Alam</b><small>A+ · Available</small></span></div></div></section>
       </aside>
     </main>
   </div>;

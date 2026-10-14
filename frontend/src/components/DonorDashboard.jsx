@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./DonorDashboard.css";
 
@@ -52,8 +52,8 @@ export default function DonorDashboard() {
         <article className="dd-summary dd-green"><span className="dd-summary-icon"><Icon name="calendar" size={27}/></span><div><small>Upcoming Appointment</small><strong className="dd-date">12 Jun 2025</strong><p>City Hospital,<br/>Chattogram</p></div></article>
       </section>
       <section className="dd-content-grid">
-        <article className="dd-panel dd-requests-panel"><div className="dd-panel-heading"><h2>Recent Blood Requests</h2><button onClick={()=>{setActive("Blood Requests");setNotice("Recent blood requests");}}>View All</button></div>
-          {visibleRequests.map(r=><div className="dd-request-row" key={r.id}><span className="dd-request-drop"><Icon name="drop" size={27}/></span><div className="dd-request-copy"><b>{r.title}</b><p>{r.units}<span className={r.urgency==="Urgent"?"dd-urgent":"dd-normal"}> · {r.urgency}</span></p></div><time>{r.time}</time><button className={r.urgency==="Urgent"?"dd-accept":"dd-view"} onClick={()=>r.urgency==="Urgent"?(setRemoved(old=>[...old,r.id]),setNotice("Request accepted")):setNotice(`Request: ${r.title}`)}>{r.urgency==="Urgent"?"Accept":"View"} <span>›</span></button></div>)}
+        <article className="dd-panel dd-requests-panel"><div className="dd-panel-heading"><h2>Recent Blood Requests</h2><button onClick={()=>{setActive("Blood Requests");setNotice("Showing matching requests from the demo request list.");}}>View All</button></div>
+          {visibleRequests.map(r=><div className="dd-request-row" key={r.id}><span className="dd-request-drop"><Icon name="drop" size={27}/></span><div className="dd-request-copy"><b>{r.title}</b><p>{r.units}<span className={r.urgency==="Urgent"?"dd-urgent":"dd-normal"}> · {r.urgency}</span></p></div><time>{r.time}</time><button className={r.urgency==="Urgent"?"dd-accept":"dd-view"} onClick={()=>{if(removed.includes(r.id)){setNotice("You already responded to this request.");}else if(r.urgency==="Urgent"){setRemoved(old=>[...old,r.id]);localStorage.setItem("bc_last_donor_response",JSON.stringify({requestId:r.id,status:"accepted",title:r.title,at:new Date().toISOString()}));setNotice("Request accepted. Recipient response recorded and notification queued.");}else{setNotice(`Request: ${r.title}`);}}}>{r.urgency==="Urgent"?"Accept":"View"} <span>›</span></button></div>)}
         </article>
         <aside className="dd-panel dd-right-panel">
           <div className="dd-panel-heading"><h2>My Availability</h2><button className={`dd-toggle ${available?"on":""}`} onClick={()=>setAvailable(v=>!v)} aria-label="Toggle availability" aria-pressed={available}><span/></button></div><div className="dd-availability-line"><p>Let hospitals know when you can donate.</p><span className={`dd-availability-pill ${available?"":"off"}`}><i/>{available?"Available":"Unavailable"}</span></div>
