@@ -1,0 +1,84 @@
+@media (max-width: 1160px) {
+  .topbar {
+    padding: 0 22px;
+    gap: 13px;
+  }
+  .brand {
+    font-size: 23px;
+  }
+  .main-nav {
+    gap: 15px;
+  }
+  .main-nav button {
+    font-size: 11.5px;
+  }
+  .nav-actions {
+    gap: 7px;
+  }
+  .register-card {
+    padding: 17px 17px 12px;
+  }
+  .register-card h1 {
+    font-size: 33px;
+  }
+  .role-card {
+    padding: 8px 7px;
+    gap: 6px;
+  }
+  .trust-item strong {
+    font-size: 10px;
+  }
+}
+@media (max-width: 920px) {
+  .page-backdrop {
+    padding: 20px 15px;
+  }
+  .site-shell {
+    max-width: 700px;
+  }
+  .topbar {
+    height: 67px;
+  }
+  .main-nav {
+    position: absolute;
+    top: 66px;
+    left: 0;
+    right: 0;
+    display: none;
+    padding: 13px 23px 20px;
+    background: #fff;
+    flex-direction: column;
+    align-items: stretch;
+    box-shadow: 0 12px 24px #00000016;
+  }
+  .main-nav.open {
+    display: flex;
+  }
+  .main-nav button {
+    text-align: left;
+    padding: 9px 5px;
+    font-size: 14px;
+  }
+  .mobile-toggle {
+    display: grid;
+  }
+  .page-content {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .register-card {
+    padding: 24px;
+  }
+  .register-card h1 {
+    font-size: clamp(31px, 5.5vw, 42px);
+  }
+  .hero-panel {
+    min-height: 560px;
+  }
+  .hero-art-wrap {
+    height: 410px;
+  }
+  .trust-strip {
+    margin-bottom: 17px;
+  }
+}

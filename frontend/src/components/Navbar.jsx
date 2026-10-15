@@ -1,5 +1,6 @@
 import { Droplet, Search, Menu } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const links = [
   "Home",
@@ -9,7 +10,10 @@ const links = [
   "Hospital Beds",
   "Contact",
 ];
-
+const paths = {
+  "Request Blood": "/request-blood",
+  "Hospital Beds": "/hospital-beds",
+};
 export default function Navbar({ active = "Request Blood" }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(active); // Request Blood starts active

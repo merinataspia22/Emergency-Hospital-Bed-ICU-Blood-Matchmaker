@@ -1,0 +1,59 @@
+.bc-hero{background:radial-gradient(ellipse at 80% 30%,#ffdce5 0%,transparent 45%),
+  radial-gradient(ellipse at 7% 80%,#fff2f0 0%,transparent 48%),linear-gradient(120deg,#fff,#fff9fa 100%);
+  position:relative;padding:58px 0 22px;overflow:hidden}
+.bc-hero-glow{position:absolute;right:-140px;top:-240px;width:540px;height:540px;
+  border-radius:50%;background:#f7b9c240;filter:blur(42px);pointer-events:none}
+.bc-hero-grid{display:grid;grid-template-columns:.89fr 1.11fr;align-items:center;gap:34px;position:relative}
+.bc-hero-copy{padding:22px 0 23px}
+.bc-eyebrow{display:inline-flex;align-items:center;gap:9px;background:#ffeaf0;color:#b5092d;
+  padding:8px 13px;border-radius:30px;font-size:10px;font-weight:850;letter-spacing:.13em}
+.bc-live-dot{width:8px;height:8px;background:#e81241;display:inline-block;border-radius:50%;
+  box-shadow:0 0 0 5px #ee2b4c1d;animation:bc-glow 2.5s ease-in-out infinite}
+.bc-hero h1{font-size:clamp(36px,4.1vw,60px);font-weight:880;letter-spacing:-.066em;
+  line-height:1.10;margin:20px 0 19px;max-width:630px}
+.bc-hero h1 span{color:var(--bc-red)}
+.bc-hero-intro{font-size:14px;color:#637082;line-height:1.75;max-width:475px;margin-bottom:24px}
+.bc-hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.bc-hero-promise{display:flex;align-items:center;gap:16px;margin-top:28px;padding-top:20px;border-top:1px solid #e5d7da;max-width:390px}
+.bc-avatar-stack{display:flex;align-items:center;padding-left:8px}
+.bc-avatar-stack i{font-size:17px;font-style:normal;display:grid;place-items:center;width:35px;height:35px;
+  border:3px solid #fff;border-radius:50%;margin-left:-9px;background:#e9f0e9;color:#d31335}
+.bc-avatar-stack i:nth-child(2){background:#ffdce0}.bc-avatar-stack i:nth-child(3){background:#eddbf5}
+.bc-hero-promise p{margin:0;font-size:12px;line-height:1.55}
+.bc-hero-promise strong,.bc-hero-promise span{display:block}
+.bc-hero-promise span{color:#7e8691}
+.bc-hero-visual-wrap{min-width:0}
+.bc-hero-visual{border-radius:24px;aspect-ratio:1.67;position:relative;overflow:hidden;
+  box-shadow:0 33px 66px #ae3d4b28;isolation:isolate;background:#edc9ce}
+.bc-hero-visual video{width:100%;height:100%;object-fit:cover;display:block}
+.bc-hero-visual-shade{position:absolute;inset:0;background:linear-gradient(180deg,#33000b41,transparent 30%,transparent 62%,#40031578)}
+.bc-film-label{position:absolute;top:25px;left:25px;color:white;font-size:9px;letter-spacing:.18em;font-weight:850;
+  display:flex;gap:12px;align-items:center;text-shadow:0 1px 5px #0008}
+.bc-film-light{width:7px;height:7px;border-radius:50%;background:#ff3048;box-shadow:0 0 12px #ff344f}
+.bc-film-control{position:absolute;bottom:30px;right:25px;display:grid;place-items:center;color:white;
+  border:1px solid #ffffff90;background:#2d15214d;border-radius:50%;width:37px;height:37px;backdrop-filter:blur(10px)}
+.bc-film-control:hover{background:#c00d38}
+.bc-scene-caption{display:flex;justify-content:space-between;margin-top:15px;font-size:10px;font-weight:800;
+  letter-spacing:.08em;color:#747c88}
+.bc-scene-caption span{display:flex;gap:8px;align-items:center}
+.bc-scene-caption svg{color:var(--bc-red)}
+.bc-scene-caption i{display:inline-block;width:25px;height:2px;background:var(--bc-red)}
+.bc-hero-bottom{display:flex;align-items:center;gap:20px;color:#ad7d86;font-size:10px;
+  letter-spacing:.17em;font-weight:800;margin-top:24px}
+.bc-scroll-stem{width:52px;height:1px;background:#d4969f}
+
+/* Continuous donation-to-care film, one narrative with restrained chapter labels */
+.bc-film-story{position:absolute;left:21px;bottom:23px;display:flex;align-items:center;gap:11px;
+  color:#fff;text-shadow:0 1px 7px #1610159c;max-width:calc(100% - 96px)}
+.bc-film-story-index{font-size:10px;white-space:nowrap;font-weight:900;letter-spacing:.12em;
+  background:#d20c3bd4;border:1px solid #ffffff65;border-radius:6px;padding:7px 9px}
+.bc-film-story-text{display:grid;gap:1px;min-width:0}
+.bc-film-story-text strong{font-size:13px;letter-spacing:-.015em}
+.bc-film-story-text small{font-size:10px;opacity:.95;line-height:1.4}
+.bc-story-video-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:#ffffff44}
+.bc-story-video-progress span{height:100%;width:0;display:block;background:#ff6486;
+  transition:width .14s linear}
+.bc-film-label{z-index:2}
+@media(max-width:720px){.bc-hero h1{font-size:clamp(35px,8vw,51px)}.bc-hero-visual{aspect-ratio:1.66}}
+@media(max-width:440px){.bc-film-story-text strong{font-size:11px}.bc-film-story-text small{font-size:9px}
+ .bc-film-story{left:12px;bottom:14px;max-width:calc(100% - 65px)}.bc-film-story-index{padding:6px;font-size:9px}}

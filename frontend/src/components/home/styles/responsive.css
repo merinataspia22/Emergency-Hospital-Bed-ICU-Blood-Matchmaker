@@ -1,0 +1,88 @@
+
+@media (max-width: 1180px) {
+  .bc-header-nav { gap: 14px; }
+  .bc-header-nav > a, .bc-header-nav > button { font-size: 11px; }
+  .bc-brand { font-size: 20px; }
+  .bc-hero-grid { gap: 25px; }
+}
+@media (max-width: 1000px) {
+  .bc-container { width: min(100% - 48px, 900px); }
+  .bc-header-nav {
+    position: absolute; display: none; top: 78px; left: 24px; right: 24px;
+    background: #fff; border: 1px solid #f2dce1;
+    box-shadow: 0 22px 60px #3a15221f; padding: 18px 24px;
+    border-radius: 16px; flex-direction: column; gap: 5px; align-items: stretch;
+  }
+  .bc-header-nav.is-open { display: flex; }
+  .bc-header-nav > a, .bc-header-nav > button { padding: 11px 5px; font-size: 14px; text-align: left; }
+  .bc-mobile-auth { display: flex !important; gap: 15px; padding: 12px 5px 5px; }
+  .bc-mobile-auth a { font-size: 13px; color: var(--bc-red); font-weight: 850; }
+  .bc-menu-button { display: grid !important; }
+  .bc-head-login { display: none; }
+  .bc-hero-grid { grid-template-columns: 1fr 1fr; }
+  .bc-hero h1 { font-size: clamp(37px, 4.5vw, 55px); }
+  .bc-hero-visual { aspect-ratio: 1.66; }
+  .bc-about-grid { gap: 44px; }
+  .bc-faq-grid { gap: 48px; }
+  .bc-contact-layout { gap: 50px; }
+}
+@media (max-width: 760px) {
+  .bc-container { width: calc(100% - 36px); }
+  .bc-section { padding: 74px 0; }
+  .bc-section-top { display: block; }
+  .bc-section-top p { margin-top: 14px; }
+  .bc-header-inner { min-height: 70px; }
+  .bc-header-nav { top: 70px; left: 18px; right: 18px; }
+  .bc-header-actions .bc-button--small { display: none; }
+  .bc-header-search { flex-wrap: wrap; }
+  .bc-header-search label { width: 100%; }
+  .bc-header-search input { flex: 1; }
+  .bc-hero { padding-top: 35px; }
+  .bc-hero-grid { grid-template-columns: 1fr; gap: 10px; }
+  .bc-hero-copy { padding: 25px 0 18px; }
+  .bc-hero h1 { font-size: clamp(41px, 10vw, 64px); }
+  .bc-hero-intro { font-size: 14px; }
+  .bc-hero-promise { margin-top: 26px; }
+  .bc-hero-visual { aspect-ratio: 1.66; }
+  .bc-hero-bottom { margin-top: 24px; }
+  .bc-feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .bc-feature-card { padding: 22px; min-height: 315px; }
+  .bc-feature-copy { font-size: 12.5px; }
+  .bc-feature-note { justify-content: flex-start; }
+  .bc-process-grid { grid-template-columns: 1fr; gap: 14px; }
+  .bc-process-card { min-height: 0; padding: 23px; }
+  .bc-about-grid { grid-template-columns: 1fr; gap: 33px; }
+  .bc-about-art { height: 300px; }
+  .bc-faq-grid, .bc-contact-layout { grid-template-columns: 1fr; gap: 28px; }
+  .bc-faq-decoration { display: none; }
+  .bc-footer-main { grid-template-columns: repeat(2, 1fr); gap: 33px; }
+  .bc-final-cta-panel { padding: 35px 27px; display: block; }
+  .bc-final-cta-panel .bc-button { margin-top: 22px; }
+  .bc-footer-bottom { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .bc-brand { font-size: 20px; }
+  .bc-brand-mark { width: 28px; }
+  .bc-brand-mark svg { width: 27px; }
+  .bc-header-actions { gap: 6px; }
+  .bc-hero-ctas { display: grid; grid-template-columns: 1fr 1fr; }
+  .bc-hero-ctas .bc-button { white-space: normal; padding: 12px 10px; font-size: 11px; gap: 7px; }
+  .bc-hero-ctas .bc-button svg:last-child { display: none; }
+  .bc-hero-visual { aspect-ratio: 1.66; border-radius: 18px; }
+  .bc-film-label { top: 14px; left: 14px; font-size: 8px; }
+  .bc-film-control { bottom: 15px; right: 12px; }
+  .bc-feature-grid { grid-template-columns: 1fr; gap: 13px; }
+  .bc-feature-card { padding: 22px; min-height: 0; }
+  .bc-feature-title { font-size: 18px; }
+  .bc-feature-copy { font-size: 12.7px; }
+  .bc-feature-highlights { margin-bottom: 8px; }
+  .bc-feature-action { padding-top: 14px; }
+  .bc-process-intro p { font-size: 13px; }
+  .bc-contact-row { grid-template-columns: 1fr; gap: 0; }
+  .bc-contact-form { padding: 20px; }
+  .bc-form-bottom { align-items: flex-start; flex-direction: column; }
+  .bc-footer-main { gap: 26px; }
+  .bc-footer-thought { padding-left: 0; border-left: 0; }
+  .bc-footer-thought strong { font-size: 19px; }
+  .bc-footer-intro { grid-column: span 2; }
+}
