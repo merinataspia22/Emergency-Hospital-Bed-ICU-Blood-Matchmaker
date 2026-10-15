@@ -1,0 +1,108 @@
+
+/* BloodConnect Common Navbar */
+
+.bc-global-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  overflow: visible;
+  isolation: auto;
+}
+
+.bc-global-nav .bc-site-header {
+  position: relative;
+}
+
+.bc-global-nav .bc-header-nav {
+  gap: clamp(10px, 1.5vw, 24px);
+}
+
+.bc-global-nav .bc-header-nav > a,
+.bc-global-nav .bc-header-nav > button {
+  cursor: pointer;
+}
+
+/* Logged-in user controls */
+
+.bc-global-nav .bc-user-menu {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.bc-global-nav .bc-dashboard-link,
+.bc-global-nav .bc-logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.bc-global-nav .bc-dashboard-link {
+  border: 1px solid #eac5ce;
+  color: #b20834;
+  background: #fff;
+  text-decoration: none;
+}
+
+.bc-global-nav .bc-dashboard-link:hover {
+  background: #fff3f4;
+}
+
+.bc-global-nav .bc-logout-button {
+  border: 0;
+  background: #d60937;
+  color: #fff;
+  cursor: pointer;
+}
+
+.bc-global-nav .bc-logout-button:hover {
+  background: #a9072a;
+}
+
+/* Mobile logout button */
+
+.bc-global-nav .bc-mobile-auth button {
+  border: 0;
+  background: transparent;
+  color: #bd1740;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Hide Find Donor's old navbar */
+
+.bc-route-find .fd-page > header.fd-navbar {
+  display: none !important;
+}
+
+/* Hide Hospital Beds' old navbar */
+
+.bc-route-beds > div > header.bg-white {
+  display: none !important;
+}
+
+/*
+  Request Blood currently has no separate navbar.
+  Dashboard sidebars and toolbars remain unchanged.
+*/
+
+@media (max-width: 1000px) {
+  .bc-global-nav .bc-user-menu {
+    display: none;
+  }
+
+  .bc-global-nav .bc-mobile-auth {
+    display: flex !important;
+  }
+
+  .bc-global-nav .bc-mobile-auth button {
+    padding: 8px 5px;
+  }
+}

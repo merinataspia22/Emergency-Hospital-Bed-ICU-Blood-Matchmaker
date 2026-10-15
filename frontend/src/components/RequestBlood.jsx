@@ -14,7 +14,6 @@ import {
   Send,
   ChevronDown,
 } from "lucide-react";
-import Navbar from "./Navbar";
 
 const DESIGN_W = 1440; // minimum design width
 const MAX_W = 2000; // widest the frame can stretch on very wide screens
@@ -120,8 +119,6 @@ const RequestBlood = () => {
         }
       >
       <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
-      <Navbar />
-
       <main className="bg-gradient-to-b from-[#fff3f4] to-white p-4 lg:p-5">
         <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[2.2fr_1fr]">
           {/* ================= LEFT SIDE ================= */}
