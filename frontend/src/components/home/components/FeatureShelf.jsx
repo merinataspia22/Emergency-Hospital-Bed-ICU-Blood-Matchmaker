@@ -68,7 +68,7 @@ export default function FeatureShelf() {
             <div className="bc-section-kicker"><span /> EVERYTHING IN ONE PLACE</div>
             <div className="bc-section-top">
               <h2 id="bc-features-heading">Help is closer <em>than you think.</em></h2>
-              <p>Simple, thoughtful features designed to bring people and vital care information together.</p>
+              
             </div>
           </Reveal>
           <div className="bc-feature-grid">
