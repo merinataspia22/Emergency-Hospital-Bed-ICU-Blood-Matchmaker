@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home, FileText, Users, Building2, MessageSquare, Bell, User, Settings, LogOut,
@@ -19,13 +19,7 @@ const stats = [
   { label: "Nearby Blood Banks", value: 6, note: "Within 10 km", icon: Building2 },
 ];
 
-const requests = [
-  { id: "#BR001", date: "28 Jun 2025", group: "A+", hospital: "Chattogram Medical", units: 2, status: "Urgent" },
-  { id: "#BR002", date: "24 Jun 2025", group: "O-", hospital: "Aga Khan Hospital", units: 1, status: "Pending" },
-  { id: "#BR003", date: "20 Jun 2025", group: "B+", hospital: "Chittagong General", units: 3, status: "Matched" },
-  { id: "#BR004", date: "15 Jun 2025", group: "A-", hospital: "Parkview Hospital", units: 2, status: "Completed" },
-  { id: "#BR005", date: "10 Jun 2025", group: "O+", hospital: "City Hospital", units: 1, status: "Completed" },
-];
+
 
 const donors = [
   { name: "Nafisa Alam", group: "A+", distance: "2 km away", photo: "" },
@@ -72,10 +66,49 @@ function Avatar({ name, photo, size = "h-10 w-10", text = "text-sm" }) {
 }
 
 export default function RecipientDashboard() {
-  const [active, setActive] = useState("Dashboard");
+  const [active, setActive] = useState("Dashboard"); 
+  const [requests, setRequests] = useState([]);
+const [loadingRequests, setLoadingRequests] = useState(true);
+const [requestError, setRequestError] = useState("");
   const navigate = useNavigate();
   const firstName = currentUser.name.split(" ")[0];
+useEffect(() => {
+  const fetchRequests = async () => {
+    const token = localStorage.getItem("accessToken");
 
+    if (!token) {
+      setRequestError("Please log in first.");
+      setLoadingRequests(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/blood-requests/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to load requests.");
+      }
+
+      const data = result.data?.requests ?? [];
+setRequests(data);
+    } catch (error) {
+      setRequestError(error.message || "Unable to load requests.");
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
+  fetchRequests();
+}, []);
   return (
     <FitToScreen>
       <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
@@ -233,32 +266,72 @@ export default function RecipientDashboard() {
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
-                      {requests.map((r) => {
-                        const s = statusStyle[r.status];
-                        const SIcon = s.icon;
-                        return (
-                          <tr key={r.id} className="border-b border-gray-100 last:border-0">
-                            <td className="px-3 py-2.5 font-medium text-gray-700">{r.id}</td>
-                            <td className="px-3 py-2.5 text-gray-700">{r.date}</td>
-                            <td className="px-3 py-2.5 font-semibold">{r.group}</td>
-                            <td className="px-3 py-2.5 text-gray-700">{r.hospital}</td>
-                            <td className="px-3 py-2.5 text-gray-700">{r.units}</td>
-                            <td className="px-3 py-2.5">
-                              <span className={`inline-flex w-[88px] items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${s.cls}`}>
-                                <SIcon className="h-3.5 w-3.5" />
-                                {r.status}
-                              </span>
-                            </td>
-                            <td className="px-3 py-2.5">
-                              <button type="button" className="rounded-md border border-[#f9c9cc] bg-white px-5 py-1.5 text-[11px] font-semibold text-[#f30000] transition hover:bg-[#fff1f2]">
-                                View
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
+                    
+<tbody>
+  {loadingRequests ? (
+    <tr>
+      <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
+        Loading your blood requests...
+      </td>
+    </tr>
+  ) : requestError ? (
+    <tr>
+      <td colSpan={7} className="px-3 py-6 text-center text-red-600">
+        {requestError}
+      </td>
+    </tr>
+  ) : requests.length === 0 ? (
+    <tr>
+      <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
+        No blood requests found.
+      </td>
+    </tr>
+  ) : (
+    requests.map((r) => {
+      const status = r.status || "Pending";
+      const s = statusStyle[status] || statusStyle.Pending;
+      const SIcon = s.icon;
+
+      return (
+        <tr key={r._id || r.id} className="border-b border-gray-100 last:border-0">
+          <td className="px-3 py-2.5 font-medium text-gray-700">
+            {(r._id || r.id || "").toString().slice(-6)}
+          </td>
+          <td className="px-3 py-2.5 text-gray-700">
+            {r.dateNeeded
+              ? new Date(r.dateNeeded).toLocaleDateString()
+              : "—"}
+          </td>
+          <td className="px-3 py-2.5 font-semibold">
+            {r.bloodGroup || "—"}
+          </td>
+          <td className="px-3 py-2.5 text-gray-700">
+            {r.hospitalName || "—"}
+          </td>
+          <td className="px-3 py-2.5 text-gray-700">
+            {r.units ?? "—"}
+          </td>
+          <td className="px-3 py-2.5">
+            <span className={`inline-flex w-[88px] items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${s.cls}`}>
+              <SIcon className="h-3.5 w-3.5" />
+              {status}
+            </span>
+          </td>
+          <td className="px-3 py-2.5">
+            <button
+              type="button"
+              className="rounded-md border border-[#f9c9cc] bg-white px-5 py-1.5 text-[11px] font-semibold text-[#f30000] transition hover:bg-[#fff1f2]"
+              onClick={() => window.alert(JSON.stringify(r, null, 2))}
+            >
+              View
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
+
                   </table>
                 </div>
               </div>

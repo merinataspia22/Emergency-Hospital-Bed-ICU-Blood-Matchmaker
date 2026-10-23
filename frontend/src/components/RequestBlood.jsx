@@ -29,7 +29,11 @@ const RequestBlood = () => {
     contact: "",
     dateNeeded: "",
     details: "",
-  });
+  }); 
+
+  const [submitting, setSubmitting] = useState(false);
+const [message, setMessage] = useState("");
+const [messageType, setMessageType] = useState("");
 
   // ---- fit whole page into one screen (no scroll) on desktop ----
   const frameRef = useRef(null);
@@ -67,11 +71,72 @@ const RequestBlood = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Blood request submitted successfully!");
-    console.log(formData);
-  };
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setMessage("");
+  setMessageType("");
+
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+    setMessage("Please log in with a valid backend account first.");
+    setMessageType("error");
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/blood-requests",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...formData,
+          units: Number(formData.units),
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.message || "Failed to submit blood request."
+      );
+    }
+
+    setMessage(
+      result.message || "Blood request submitted successfully!"
+    );
+    setMessageType("success");
+
+    setFormData({
+      patientName: "",
+      bloodGroup: "",
+      units: "",
+      urgency: "Normal",
+      hospitalName: "",
+      hospitalLocation: "",
+      contact: "",
+      dateNeeded: "",
+      details: "",
+    });
+  } catch (error) {
+    setMessage(
+      error.message || "Unable to connect to the backend."
+    );
+    setMessageType("error");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   const banks = [
     { name: "Chattogram Medical College Blood Bank", distance: "2.1 km" },
@@ -365,13 +430,29 @@ const RequestBlood = () => {
                   </div>
                 </div>
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#f30000] py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#d10000] active:scale-[0.99]"
-                >
-                  <Send className="h-4 w-4" /> Submit Request
-                </button>
+                {/* Submit */} 
+                {message && (
+  <p
+    role="status"
+    className={`mb-3 rounded-lg p-3 text-sm ${
+      messageType === "success"
+        ? "bg-green-50 text-green-700"
+        : "bg-red-50 text-red-700"
+    }`}
+  >
+    {message}
+  </p>
+)}
+                
+<button
+  type="submit"
+  disabled={submitting}
+  className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#f30000] py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-[#d10000] disabled:cursor-not-allowed disabled:opacity-60"
+>
+  <Send className="h-4 w-4" />
+  {submitting ? "Submitting..." : "Submit Request"}
+</button>
+
               </form>
             </div>
           </section>
