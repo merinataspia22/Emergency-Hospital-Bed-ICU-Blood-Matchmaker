@@ -8,65 +8,116 @@ import {
 } from "react";
 
 import {
-  clearDemoSession,
-  loginDemoAccount,
-  readDemoSession,
-  registerDemoAccount,
-  saveDemoSession,
-} from "./demoAuth";
+  apiRequest,
+  readToken,
+  saveToken,
+  clearToken,
+} from "../services/api.js";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(readDemoSession);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Compatibility with the existing FindDonor demo.
+  // Restore login from the real backend.
+  useEffect(() => {
+    let active = true;
+    const token = readToken();
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    apiRequest("/auth/me", { token })
+      .then((data) => {
+        if (active) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          clearToken();
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Compatibility with the existing Find Donor page.
   useEffect(() => {
     try {
       if (user) {
-        window.localStorage.setItem(
+        localStorage.setItem(
           "bc_logged_in",
           "true"
         );
       } else {
-        window.localStorage.removeItem("bc_logged_in");
+        localStorage.removeItem(
+          "bc_logged_in"
+        );
       }
     } catch {
-      // Ignore blocked browser storage.
+      // Ignore unavailable browser storage.
     }
   }, [user]);
 
-  const login = async (email, password) => {
-    const account = await loginDemoAccount(
-      email,
-      password
-    );
+  // Register new donor or recipient in MongoDB.
+  const register = async (form) => {
+    const data = await apiRequest("/auth/register", {
+      method: "POST",
+      body: form,
+    });
 
-    const session = saveDemoSession(account);
-
-    setUser(session);
-
-    return session;
+    return data.user;
   };
 
-  const register = async (form) => {
-    return registerDemoAccount(form);
+  // Login using the MongoDB account.
+  const login = async (email, password) => {
+    const data = await apiRequest("/auth/login", {
+      method: "POST",
+      body: {
+        email: email.trim(),
+        password,
+      },
+    });
+
+    if (!data?.user || !data?.token) {
+      throw new Error(
+        "Invalid response from the login server."
+      );
+    }
+
+    saveToken(data.token);
+    setUser(data.user);
+
+    return data.user;
   };
 
   const logout = () => {
-    clearDemoSession();
+    clearToken();
     setUser(null);
   };
 
   const value = useMemo(
     () => ({
       user,
+      loading,
       login,
       register,
       logout,
       isAuthenticated: Boolean(user),
     }),
-    [user]
+    [user, loading]
   );
 
   return (

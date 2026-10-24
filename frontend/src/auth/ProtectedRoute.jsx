@@ -4,17 +4,31 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { useAuth } from "./AuthContext";
-import { ROLE_ROUTES } from "./demoAuth";
+import { useAuth } from "./AuthContext.jsx";
+import { ROLE_ROUTES } from "./demoAuth.js";
 
 export default function ProtectedRoute({
   role,
   children,
 }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  // User is not logged in.
+  if (loading) {
+    return (
+      <main
+        role="status"
+        style={{
+          minHeight: "60vh",
+          display: "grid",
+          placeItems: "center",
+        }}
+      >
+        Checking your account...
+      </main>
+    );
+  }
+
   if (!user) {
     return (
       <Navigate
@@ -27,19 +41,14 @@ export default function ProtectedRoute({
     );
   }
 
-  // User has a different role.
-  if (user.role !== role) {
-    const dashboard =
-      ROLE_ROUTES[user.role] || "/";
-
+  if (role && user.role !== role) {
     return (
       <Navigate
-        to={dashboard}
+        to={ROLE_ROUTES[user.role] || "/"}
         replace
       />
     );
   }
 
-  // Correct role: show dashboard.
   return children;
 }
