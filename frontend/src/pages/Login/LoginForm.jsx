@@ -230,8 +230,8 @@ export default function LoginForm({ onNotice, onForgot }) {
         </p>
 
         <p className="bc-demo-caption">
-          Frontend demo only. Real authentication
-          requires a secure backend.
+          Sign in with your registered
+           BloodConnect account.
         </p>
       </div>
     </section>
