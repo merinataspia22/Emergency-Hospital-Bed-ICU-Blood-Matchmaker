@@ -229,10 +229,7 @@ export default function LoginForm({ onNotice, onForgot }) {
           </Link>
         </p>
 
-        <p className="bc-demo-caption">
-          Frontend demo only. Real authentication
-          requires a secure backend.
-        </p>
+        
       </div>
     </section>
   );

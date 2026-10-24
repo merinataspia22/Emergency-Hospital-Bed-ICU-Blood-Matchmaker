@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom"; 
+import { apiFetch } from "../utils/apiFetch"; 
+import { useAuth } from "../auth/AuthContext";
 import {
   Home, FileText, Users, Building2, MessageSquare, Bell, User, Settings, LogOut,
   Droplet, ChevronDown, Plus, Phone, BedDouble, MapPin, ArrowRight, Mail,
-  AlertCircle, Clock, CheckCircle2,
+  AlertCircle, Clock, CheckCircle2, XCircle,
 } from "lucide-react";
 import FitToScreen from "./FitToScreen";
+import RequestDetailsModal from "./RequestDetailsModal";
 
 /* ------------------------------------------------------------------
    MOCK DATA  ->  backend ready hole ei gulo API theke ashbe
@@ -18,8 +21,6 @@ const stats = [
   { label: "Matched Donors", value: 12, note: "Donors ready to help", icon: Users },
   { label: "Nearby Blood Banks", value: 6, note: "Within 10 km", icon: Building2 },
 ];
-
-
 
 const donors = [
   { name: "Nafisa Alam", group: "A+", distance: "2 km away", photo: "" },
@@ -49,9 +50,12 @@ const statusStyle = {
   Pending: { cls: "bg-[#dbeafe] text-[#1d6fe0]", icon: Clock },
   Matched: { cls: "bg-[#dcfce7] text-[#15803d]", icon: CheckCircle2 },
   Completed: { cls: "bg-[#dcfce7] text-[#15803d]", icon: CheckCircle2 },
+  Cancelled: { cls: "bg-gray-200 text-gray-600", icon: XCircle },
 };
 
 const card = "rounded-xl border border-[#fde2e4] bg-white shadow-sm";
+
+const TOKEN_KEY = "accessToken";
 
 /* small avatar: photo thakle photo, na hole initials */
 function Avatar({ name, photo, size = "h-10 w-10", text = "text-sm" }) {
@@ -66,15 +70,24 @@ function Avatar({ name, photo, size = "h-10 w-10", text = "text-sm" }) {
 }
 
 export default function RecipientDashboard() {
-  const [active, setActive] = useState("Dashboard"); 
+  const [active, setActive] = useState("Dashboard");
   const [requests, setRequests] = useState([]);
-const [loadingRequests, setLoadingRequests] = useState(true);
-const [requestError, setRequestError] = useState("");
-  const navigate = useNavigate();
-  const firstName = currentUser.name.split(" ")[0];
-useEffect(() => {
-  const fetchRequests = async () => {
-    const token = localStorage.getItem("accessToken");
+  const [summary, setSummary] = useState({ active: 0, fulfilled: 0, total: 0 });
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [requestError, setRequestError] = useState("");
+  const [selected, setSelected] = useState(null); // View e click kora request
+  const navigate = useNavigate(); 
+  const { logout } = useAuth();
+  const firstName = currentUser.name.split(" ")[0]; 
+
+  const handleLogout = () => {
+  logout();
+  navigate("/login", { replace: true });
+};
+
+  // API theke list ane (prothom bar ar update er por abar)
+  const fetchRequests = useCallback(async () => {
+    const token = localStorage.getItem(TOKEN_KEY);
 
     if (!token) {
       setRequestError("Please log in first.");
@@ -83,32 +96,43 @@ useEffect(() => {
     }
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/blood-requests/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+     const response = await apiFetch(
+  "http://localhost:5000/api/blood-requests/me"
+);
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(result.message || "Failed to load requests.");
       }
 
-      const data = result.data?.requests ?? [];
-setRequests(data);
+      setRequests(result.data?.requests ?? []);
+      setSummary(result.data?.summary ?? { active: 0, fulfilled: 0, total: 0 });
+      setRequestError("");
     } catch (error) {
       setRequestError(error.message || "Unable to load requests.");
     } finally {
       setLoadingRequests(false);
     }
+  }, []);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  // Modal theke edit/cancel/complete hole
+  const handleUpdated = (updated) => {
+    setRequests((prev) => prev.map((r) => (r._id === updated._id ? updated : r)));
+    setSelected(updated);
+    fetchRequests(); // stats card gulo refresh
   };
 
-  fetchRequests();
-}, []);
+  // Active ar Fulfilled card backend er summary theke
+  const liveStats = stats.map((s) => {
+    if (s.label === "Active Requests") return { ...s, value: summary.active };
+    if (s.label === "Fulfilled Requests") return { ...s, value: summary.fulfilled };
+    return s;
+  });
+
   return (
     <FitToScreen>
       <div className="overflow-hidden rounded-3xl bg-white shadow-xl">
@@ -145,7 +169,10 @@ setRequests(data);
                 <button
                   key={label}
                   type="button"
-                  onClick={() => setActive(label)}
+                  onClick={() => {
+  setActive(label);
+  if (label === "My Requests") navigate("/my-requests");
+}}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition ${
                     active === label
                       ? "bg-[#d9141f] text-white shadow-md"
@@ -159,7 +186,8 @@ setRequests(data);
             </nav>
 
             <button
-              type="button"
+              type="button" 
+              onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-800 hover:text-[#f30000]"
             >
               <LogOut className="h-[18px] w-[18px] text-[#f30000]" />
@@ -194,7 +222,7 @@ setRequests(data);
 
             {/* Stats */}
             <div className="mt-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-              {stats.map(({ label, value, note, icon: Icon }) => (
+              {liveStats.map(({ label, value, note, icon: Icon }) => (
                 <div key={label} className={`${card} flex items-center gap-4 p-4`}>
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#ffe3e4]">
                     <Icon className="h-6 w-6 text-[#f30000]" />
@@ -266,72 +294,69 @@ setRequests(data);
                         ))}
                       </tr>
                     </thead>
-                    
-<tbody>
-  {loadingRequests ? (
-    <tr>
-      <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
-        Loading your blood requests...
-      </td>
-    </tr>
-  ) : requestError ? (
-    <tr>
-      <td colSpan={7} className="px-3 py-6 text-center text-red-600">
-        {requestError}
-      </td>
-    </tr>
-  ) : requests.length === 0 ? (
-    <tr>
-      <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
-        No blood requests found.
-      </td>
-    </tr>
-  ) : (
-    requests.map((r) => {
-      const status = r.status || "Pending";
-      const s = statusStyle[status] || statusStyle.Pending;
-      const SIcon = s.icon;
 
-      return (
-        <tr key={r._id || r.id} className="border-b border-gray-100 last:border-0">
-          <td className="px-3 py-2.5 font-medium text-gray-700">
-            {(r._id || r.id || "").toString().slice(-6)}
-          </td>
-          <td className="px-3 py-2.5 text-gray-700">
-            {r.dateNeeded
-              ? new Date(r.dateNeeded).toLocaleDateString()
-              : "—"}
-          </td>
-          <td className="px-3 py-2.5 font-semibold">
-            {r.bloodGroup || "—"}
-          </td>
-          <td className="px-3 py-2.5 text-gray-700">
-            {r.hospitalName || "—"}
-          </td>
-          <td className="px-3 py-2.5 text-gray-700">
-            {r.units ?? "—"}
-          </td>
-          <td className="px-3 py-2.5">
-            <span className={`inline-flex w-[88px] items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${s.cls}`}>
-              <SIcon className="h-3.5 w-3.5" />
-              {status}
-            </span>
-          </td>
-          <td className="px-3 py-2.5">
-            <button
-              type="button"
-              className="rounded-md border border-[#f9c9cc] bg-white px-5 py-1.5 text-[11px] font-semibold text-[#f30000] transition hover:bg-[#fff1f2]"
-              onClick={() => window.alert(JSON.stringify(r, null, 2))}
-            >
-              View
-            </button>
-          </td>
-        </tr>
-      );
-    })
-  )}
-</tbody>
+                    <tbody>
+                      {loadingRequests ? (
+                        <tr>
+                          <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
+                            Loading your blood requests...
+                          </td>
+                        </tr>
+                      ) : requestError ? (
+                        <tr>
+                          <td colSpan={7} className="px-3 py-6 text-center text-red-600">
+                            {requestError}
+                          </td>
+                        </tr>
+                      ) : requests.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-3 py-6 text-center text-gray-500">
+                            No blood requests found.
+                          </td>
+                        </tr>
+                      ) : (
+                        requests.map((r) => {
+                          const status = r.status || "Pending";
+                          const s = statusStyle[status] || statusStyle.Pending;
+                          const SIcon = s.icon;
 
+                          return (
+                            <tr key={r._id || r.id} className="border-b border-gray-100 last:border-0">
+                              <td className="px-3 py-2.5 font-medium text-gray-700">
+                                {r.code || (r._id || r.id || "").toString().slice(-6)}
+                              </td>
+                              <td className="px-3 py-2.5 text-gray-700">
+                                {r.dateNeeded
+                                  ? new Date(r.dateNeeded).toLocaleDateString("en-GB", {
+                                      day: "2-digit",
+                                      month: "short",
+                                      year: "numeric",
+                                    })
+                                  : "—"}
+                              </td>
+                              <td className="px-3 py-2.5 font-semibold">{r.bloodGroup || "—"}</td>
+                              <td className="px-3 py-2.5 text-gray-700">{r.hospitalName || "—"}</td>
+                              <td className="px-3 py-2.5 text-gray-700">{r.units ?? "—"}</td>
+                              <td className="px-3 py-2.5">
+                                <span className={`inline-flex w-[88px] items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-semibold ${s.cls}`}>
+                                  <SIcon className="h-3.5 w-3.5" />
+                                  {status}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <button
+                                  type="button"
+                                  className="rounded-md border border-[#f9c9cc] bg-white px-5 py-1.5 text-[11px] font-semibold text-[#f30000] transition hover:bg-[#fff1f2]"
+                                  onClick={() => setSelected(r)}
+                                >
+                                  View
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
                   </table>
                 </div>
               </div>
@@ -401,6 +426,15 @@ setRequests(data);
           </main>
         </div>
       </div>
+
+      {/* View button e click korle popup */}
+      {selected && (
+        <RequestDetailsModal
+          request={selected}
+          onClose={() => setSelected(null)}
+          onUpdated={handleUpdated}
+        />
+      )}
     </FitToScreen>
   );
 }

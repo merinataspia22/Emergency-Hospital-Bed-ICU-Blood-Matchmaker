@@ -1,7 +1,7 @@
 
  // Member 1 er login ready na thakle Postman test er jonno fake token banao
 import dotenv from "dotenv";
-dotenv.config({ path: "backend/.env" });
+dotenv.config();
 
 import jwt from "jsonwebtoken";
 

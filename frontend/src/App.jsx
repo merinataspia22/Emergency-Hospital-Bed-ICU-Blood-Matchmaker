@@ -13,7 +13,8 @@ import RegistrationPage from "./pages/Registration/RegistrationPage";
 
 // Existing Team Components
 import RequestBlood from "./components/RequestBlood";
-import RecipientDashboard from "./components/RecipientDashboard";
+import RecipientDashboard from "./components/RecipientDashboard"; 
+import MyRequests from "./components/MyRequests";
 import AdminDashboard from "./components/AdminDashboard";
 import FindDonor from "./components/FindDonor";
 import HospitalBeds from "./components/HospitalBeds";
@@ -112,8 +113,11 @@ export default function App() {
                 <ProtectedRoute role="recipient">
                   <RecipientDashboard />
                 </ProtectedRoute>
-              }
-            />
+              } 
+              
+              
+            />  
+            <Route path="/my-requests" element={<ProtectedRoute role="recipient"><MyRequests /></ProtectedRoute>} />
 
             {/* Admin Dashboard */}
 
