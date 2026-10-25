@@ -1,4 +1,4 @@
-
+```jsx
 import {
   createContext,
   useContext,
@@ -7,103 +7,110 @@ import {
   useState,
 } from "react";
 
+import {
+  apiRequest,
+  readToken,
+  saveToken,
+  clearToken,
+} from "../services/api.js";
+
 const AuthContext = createContext(null);
 
-const API_URL = "http://localhost:5000/api/auth";
-const SESSION_KEY = "bc_auth_user_v1";
-
-function readUser() {
-  try {
-    const token = localStorage.getItem("accessToken");
-    const user = JSON.parse(
-      localStorage.getItem(SESSION_KEY) || "null"
-    );
-
-    return token && user ? user : null;
-  } catch {
-    return null;
-  }
-}
-
-function saveSession(user, accessToken) {
-  localStorage.setItem("accessToken", accessToken);
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  localStorage.setItem("bc_logged_in", "true");
-  return user;
-}
-
-async function authRequest(endpoint, body) {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok || !result.success) {
-    throw new Error(result.message || "Authentication failed");
-  }
-
-  return result.data;
-}
-
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(readUser);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Restore the logged-in user from the backend.
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("bc_logged_in", "true");
-    } else {
-      localStorage.removeItem("bc_logged_in");
+    let active = true;
+    const token = readToken();
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    apiRequest("/auth/me", { token })
+      .then((data) => {
+        if (active) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          clearToken();
+          setUser(null);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep compatibility with the existing Find Donor page.
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem("bc_logged_in", "true");
+      } else {
+        localStorage.removeItem("bc_logged_in");
+      }
+    } catch {
+      // Ignore unavailable browser storage.
     }
   }, [user]);
 
-  const login = async (email, password) => {
-    const data = await authRequest("login", {
-      email: email.trim(),
-      password,
-    });
-
-    const session = saveSession(data.user, data.accessToken);
-    setUser(session);
-
-    return session;
-  };
-
+  // Register a new donor or recipient.
   const register = async (form) => {
-    const data = await authRequest("register", {
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      password: form.password,
-      role: form.role,
-      bloodGroup: form.bloodGroup,
-      location: form.location,
-      lastDonation: form.lastDonation || null,
+    const data = await apiRequest("/auth/register", {
+      method: "POST",
+      body: form,
     });
 
     return data.user;
   };
 
+  // Login using the backend.
+  const login = async (email, password) => {
+    const data = await apiRequest("/auth/login", {
+      method: "POST",
+      body: {
+        email: email.trim(),
+        password,
+      },
+    });
+
+    if (!data?.user || !data?.token) {
+      throw new Error("Invalid response from the login server.");
+    }
+
+    saveToken(data.token);
+    setUser(data.user);
+
+    return data.user;
+  };
+
   const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem(SESSION_KEY);
-    localStorage.removeItem("bc_logged_in");
+    clearToken();
     setUser(null);
   };
 
   const value = useMemo(
     () => ({
       user,
+      loading,
       login,
       register,
       logout,
       isAuthenticated: Boolean(user),
     }),
-    [user]
+    [user, loading]
   );
 
   return (
@@ -122,3 +129,4 @@ export function useAuth() {
 
   return context;
 }
+```
