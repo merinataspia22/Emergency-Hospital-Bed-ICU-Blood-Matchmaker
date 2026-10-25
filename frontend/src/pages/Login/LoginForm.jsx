@@ -230,8 +230,7 @@ export default function LoginForm({ onNotice, onForgot }) {
         </p>
 
         <p className="bc-demo-caption">
-          Sign in with your registered
-           BloodConnect account.
+          Sign in with your registered BloodConnect account.
         </p>
       </div>
     </section>

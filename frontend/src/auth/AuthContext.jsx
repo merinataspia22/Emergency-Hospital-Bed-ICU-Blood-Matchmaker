@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore login from the real backend.
+  // Restore the logged-in user from the backend.
   useEffect(() => {
     let active = true;
     const token = readToken();
@@ -53,25 +53,20 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Compatibility with the existing Find Donor page.
+  // Keep compatibility with the existing Find Donor page.
   useEffect(() => {
     try {
       if (user) {
-        localStorage.setItem(
-          "bc_logged_in",
-          "true"
-        );
+        localStorage.setItem("bc_logged_in", "true");
       } else {
-        localStorage.removeItem(
-          "bc_logged_in"
-        );
+        localStorage.removeItem("bc_logged_in");
       }
     } catch {
       // Ignore unavailable browser storage.
     }
   }, [user]);
 
-  // Register new donor or recipient in MongoDB.
+  // Register a new donor or recipient.
   const register = async (form) => {
     const data = await apiRequest("/auth/register", {
       method: "POST",
@@ -81,7 +76,7 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
-  // Login using the MongoDB account.
+  // Login using the backend.
   const login = async (email, password) => {
     const data = await apiRequest("/auth/login", {
       method: "POST",
@@ -91,13 +86,12 @@ export function AuthProvider({ children }) {
       },
     });
 
-    if (!data?.user || !data?.token) {
-      throw new Error(
-        "Invalid response from the login server."
-      );
+    // Backend returns accessToken, not token.
+    if (!data?.user || !data?.accessToken) {
+      throw new Error("Invalid response from the login server.");
     }
 
-    saveToken(data.token);
+    saveToken(data.accessToken);
     setUser(data.user);
 
     return data.user;
@@ -131,9 +125,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      "useAuth must be used inside AuthProvider."
-    );
+    throw new Error("useAuth must be used inside AuthProvider.");
   }
 
   return context;
