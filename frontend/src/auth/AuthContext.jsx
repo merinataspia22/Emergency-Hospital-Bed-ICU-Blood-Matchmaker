@@ -1,4 +1,4 @@
-```jsx
+
 import {
   createContext,
   useContext,
@@ -86,11 +86,12 @@ export function AuthProvider({ children }) {
       },
     });
 
-    if (!data?.user || !data?.token) {
+    // Backend returns accessToken, not token.
+    if (!data?.user || !data?.accessToken) {
       throw new Error("Invalid response from the login server.");
     }
 
-    saveToken(data.token);
+    saveToken(data.accessToken);
     setUser(data.user);
 
     return data.user;
@@ -129,4 +130,3 @@ export function useAuth() {
 
   return context;
 }
-```
