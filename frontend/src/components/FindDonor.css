@@ -11,3 +11,35 @@
 
 /* Member 2 integration: keep donor status consistent with the dashboard toggle. */
 .fd-status-off{background:#f0f1f4;color:#6d7280}.fd-status-off i{background:#9aa0aa}
+
+/* ===== Member 2: real map + contact modal (FindDonor.css er ekdom shesh e paste korun) ===== */
+.fd-emergency{text-decoration:none;color:inherit}
+.fd-map-art.fd-live{background:#e6edf0}.fd-map-art.fd-live:before,.fd-map-art.fd-live:after{display:none}
+.fd-leaflet{position:absolute;inset:0;z-index:1}.fd-map-fail{position:absolute;inset:0;z-index:2;display:grid;place-items:center;text-align:center;padding:20px;font-size:13px;color:#667078;background:#e6edf0}
+.fd-leaflet-pin{background:none;border:0;filter:drop-shadow(0 2px 1px #6663)}
+.fd-pop{display:flex;align-items:center;gap:8px}.fd-pop img{width:33px;height:33px;border-radius:50%;object-fit:cover}.fd-pop b{display:block;font-size:12px}.fd-pop small{display:block;font-size:10px;color:#10a265;margin-top:3px}
+.fd-modal-overlay{position:fixed;inset:0;background:#15171b66;display:grid;place-items:center;z-index:1000;padding:16px}
+.fd-modal{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:420px;box-shadow:0 10px 40px #1517234d}
+.fd-modal h3{margin:0 0 12px;font-size:18px;letter-spacing:-.3px}
+.fd-modal-contact{background:#fff0f2;border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:13px}.fd-modal-contact p{margin:4px 0}
+.fd-modal-call{display:inline-block;margin-top:6px;color:#c90b28;font-weight:700;text-decoration:none}
+.fd-modal-err{color:#c90b28}
+.fd-modal textarea{width:100%;min-height:90px;border:1px solid #dfe2e8;border-radius:8px;padding:10px;font:13px 'Roboto Condensed',Arial,sans-serif;resize:vertical;outline-color:#df1230}
+.fd-modal-note{margin:8px 0 0;font-size:12px;color:#5f626c}
+.fd-modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.fd-modal-cancel{height:39px;border:1px solid #efc3ca;border-radius:9px;background:#fff;color:#c90b28;padding:0 16px;font:600 13px 'Roboto Condensed',sans-serif;cursor:pointer}
+.fd-primary-btn:disabled{opacity:.6;cursor:default}
+.fd-status-off{background:#f0f1f4;color:#6d7280}.fd-status-off i{background:#9aa0aa}
+
+/* ===== Big map (View Map) ===== */
+.fd-bigmap-overlay{position:fixed;inset:0;background:#15171b8c;display:grid;place-items:center;z-index:1100;padding:20px}
+.fd-bigmap{background:#fff;border-radius:16px;width:100%;max-width:1200px;height:calc(100vh - 40px);max-height:820px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 14px 50px #15172359}
+.fd-bigmap-head{display:flex;align-items:center;gap:12px;padding:13px 18px;border-bottom:1px solid #eceef1}
+.fd-bigmap-head h3{margin:0;font-size:19px;letter-spacing:-.3px}.fd-bigmap-head>span{font-size:12px;color:#858894}
+.fd-bigmap-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.fd-bigmap-btn{height:36px;border:1px solid #efc3ca;border-radius:9px;background:#fff;color:#c90b28;padding:0 14px;font:600 13px 'Roboto Condensed',sans-serif;cursor:pointer}
+.fd-bigmap-close{width:36px;height:36px;border:0;border-radius:50%;background:#d30b2a;color:#fff;font-size:22px;line-height:1;cursor:pointer}
+.fd-bigmap-canvas{flex:1;min-height:0;position:relative;z-index:1}
+.fd-pin-approx{opacity:.65}
+.fd-pop small.fd-pop-loc{color:#6b6e78}
+.fd-pop-link{display:block;margin-top:5px;font-size:11px;font-weight:700;color:#c90b28;text-decoration:none}
