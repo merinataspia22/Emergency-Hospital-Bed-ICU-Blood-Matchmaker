@@ -48,12 +48,19 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// 3. Blood Request Schema (Admin Overview Stats)
+// 3. Blood Request Schema (Matched with frontend and Atlas documents)
 const bloodRequestSchema = new mongoose.Schema({
-  text: { type: String },
-  units: { type: String },
-  level: { type: String, default: 'Normal' },
-  time: { type: String }
+  requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  patientName: { type: String, required: true },
+  bloodGroup: { type: String, required: true },
+  units: { type: Number, required: true },
+  urgency: { type: String, default: 'Normal' },
+  hospitalName: { type: String, required: true },
+  hospitalLocation: { type: String },
+  contact: { type: String, required: true },
+  dateNeeded: { type: String },
+  details: { type: String, default: "" },
+  status: { type: String, default: 'Pending' }
 }, { timestamps: true });
 
 const BloodRequest = mongoose.model('BloodRequest', bloodRequestSchema);
@@ -188,6 +195,55 @@ app.get('/api/admin/overview', async (req, res) => {
       completedDonations: 320,
       hospitalPartners: totalHospitals || 42
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- 4. BLOOD REQUESTS CRUD ENDPOINTS ---
+
+// A. CREATE (Add Blood Request)
+app.post('/api/bloodrequests', async (req, res) => {
+  try {
+    const newRequest = new BloodRequest(req.body);
+    const savedRequest = await newRequest.save();
+    res.status(201).json({ message: "Blood request added successfully!", request: savedRequest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// B. READ (Get All Blood Requests)
+app.get('/api/bloodrequests', async (req, res) => {
+  try {
+    const requests = await BloodRequest.find().sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// C. UPDATE (Update Blood Request)
+app.put('/api/bloodrequests/:id', async (req, res) => {
+  try {
+    const updatedRequest = await BloodRequest.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedRequest) return res.status(404).json({ message: "Blood request not found" });
+    res.json({ message: "Blood request updated successfully", request: updatedRequest });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// D. DELETE (Remove Blood Request)
+app.delete('/api/bloodrequests/:id', async (req, res) => {
+  try {
+    const deletedRequest = await BloodRequest.findByIdAndDelete(req.params.id);
+    if (!deletedRequest) return res.status(404).json({ message: "Blood request not found" });
+    res.json({ message: "Blood request deleted successfully", deletedRequest });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
