@@ -1,40 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import welcomeArt from "../assets/welcome-art.png";
+import { getMyDonor, getMyHistory, getConversations, getMyRequests, getThread, respondToRequest, sendMessage, setMyAvailability, setMyAvatar, setMyLocation, updateMyDonor } from "../services/donorApi.js";
 import "./DonorDashboard.css";
 
 /* ---------- demo data (backend e connect korar age porjonto) ---------- */
-const initRequests = [
-  { id: 1, group: "A+", hospital: "Chattogram Medical Hospital", place: "Panchlaish, Chattogram", units: "2 Units", urgency: "Urgent", time: "2 hours ago", phone: "01711-000001", note: "Patient needs blood for emergency surgery today.", status: "pending" },
-  { id: 2, group: "O-", hospital: "Aga Khan Hospital", place: "Kulshi, Chattogram", units: "1 Unit", urgency: "Normal", time: "5 hours ago", phone: "01711-000002", note: "Needed within 2 days for a scheduled procedure.", status: "pending" },
-  { id: 3, group: "B+", hospital: "Chittagong General Hospital", place: "Anderkilla, Chattogram", units: "3 Units", urgency: "Urgent", time: "1 day ago", phone: "01711-000003", note: "Accident patient, multiple units required.", status: "pending" },
-  { id: 4, group: "A+", hospital: "Max Hospital", place: "Khulshi, Chattogram", units: "1 Unit", urgency: "Normal", time: "2 days ago", phone: "01711-000004", note: "Thalassemia patient, regular transfusion.", status: "pending" }
-];
-const initHistory = [
-  { id: 1, date: "2025-06-12", group: "A+", hospital: "City Hospital, Chattogram" },
-  { id: 2, date: "2025-02-15", group: "A+", hospital: "City Hospital" },
-  { id: 3, date: "2024-10-10", group: "A+", hospital: "Aga Khan Hospital" },
-  { id: 4, date: "2024-06-05", group: "A+", hospital: "Chattogram Medical Hospital" },
-  { id: 5, date: "2024-02-02", group: "A+", hospital: "Chittagong General Hospital" }
-];
+/* Appointments / notifications / chats ekhono demo (onno endpoint lagbe). Blood requests ekhon real. */
 const initAppts = [{ id: 1, date: "2025-06-12", time: "10:00 AM - 11:00 AM", hospital: "City Hospital, Chattogram", place: "Hathazari, Chattogram" }];
 const initNotifs = [
   { id: 1, icon: "megaphone", title: "Your donation helped 3 patients!", text: "Thank you for making a difference.", time: "2 hours ago", read: false },
   { id: 2, icon: "calendar", title: "Upcoming donation appointment", text: "12 Jun 2025 at City Hospital, Chattogram", time: "1 day ago", read: false },
   { id: 3, icon: "heart", title: "New blood request matches your profile", text: "A+ blood needed at Chattogram Medical Hospital", time: "2 days ago", read: false }
 ];
-const initChats = [
-  { id: 1, name: "City Hospital", role: "Blood bank", msgs: [{ from: "them", text: "Hello Nafisa, your appointment is confirmed for 12 Jun." }, { from: "me", text: "Thank you! I will be there on time." }] },
-  { id: 2, name: "Rahim Uddin", role: "Requester", msgs: [{ from: "them", text: "Thank you for accepting my request. Please call me when you arrive." }] },
-  { id: 3, name: "BloodConnect Support", role: "Support", msgs: [{ from: "them", text: "Welcome to BloodConnect! Let us know if you need help." }] }
-];
-const initProfile = { name: "Nafisa Alam", email: "nafisa.alam@example.com", phone: "01712-345678", group: "A+", dob: "1999-03-14", weight: "56", address: "Hathazari, Chattogram" };
+const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
+const emptyProfile = { name: "", email: "", phone: "", group: "", dob: "", weight: "", address: "" };
 const NAV = [["grid", "Dashboard"], ["user", "My Profile"], ["clipboard", "Blood Requests"], ["history", "Donation History"], ["calendar", "Appointments"], ["bell", "Notifications"], ["message", "Messages"], ["settings", "Settings"]];
 
 const d = (s) => new Date(s + "T00:00:00");
-const fmt = (s) => d(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-const fmtLong = (s) => d(s).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const fmt = (s) => (s ? d(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-");
+const fmtLong = (s) => (s ? d(s).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "-");
+const ago = (iso) => {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 60) return `${Math.max(m, 1)} min ago`;
+  const h = Math.floor(m / 60);
+  return h < 24 ? `${h} hours ago` : `${Math.floor(h / 24)} days ago`;
+};
+/* backend request ke dashboard er request shape e convert kore */
+const toRequest = (r) => ({
+  id: r.id,
+  group: r.bloodGroup,
+  hospital: r.hospitalName,
+  place: r.hospitalLocation,
+  units: `${r.units} ${r.units > 1 ? "Units" : "Unit"}`,
+  urgency: r.urgency === "Normal" ? "Normal" : "Urgent",
+  time: ago(r.createdAt),
+  phone: r.contact,
+  note: r.details || `Blood needed by ${new Date(r.dateNeeded).toLocaleDateString("en-GB")}.`,
+  status: r.myResponse || "pending"
+});
 const reqTitle = (r) => `${r.group} blood needed at ${r.hospital}`;
+
+/* backend er donor object ke dashboard er profile shape e convert kore */
+const toProfile = (me) => ({
+  name: me.name || "",
+  email: me.email || "",
+  phone: me.phone || "",
+  group: me.bloodGroup || "",
+  dob: me.dateOfBirth ? me.dateOfBirth.slice(0, 10) : "",
+  weight: me.weightKg ? String(me.weightKg) : "",
+  address: me.address || me.city || ""
+});
 
 /* ---------- icons ---------- */
 const Icon = ({ name, size = 19 }) => {
@@ -102,14 +117,18 @@ export default function DonorDashboard() {
   const [notice, setNotice] = useState("");
   const [modal, setModal] = useState(null);
   const [menu, setMenu] = useState(false);
-  const [requests, setRequests] = useState(initRequests);
-  const [history] = useState(initHistory);
+  const [requests, setRequests] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(null);
   const [appts, setAppts] = useState(initAppts);
   const [notifs, setNotifs] = useState(initNotifs);
-  const [chats, setChats] = useState(initChats);
-  const [chatId, setChatId] = useState(1);
+  const [chats, setChats] = useState([]);
+  const [chatId, setChatId] = useState(null);
   const [draft, setDraft] = useState("");
-  const [profile, setProfile] = useState(initProfile);
+  const [profile, setProfile] = useState(emptyProfile);
+  const [savedProfile, setSavedProfile] = useState(emptyProfile);
+  const [avatar, setAvatar] = useState("");
+  const [myLoc, setMyLoc] = useState(null);
   const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState("All");
   const [prefs, setPrefs] = useState({ email: true, sms: true, urgent: true, visible: true });
@@ -117,15 +136,67 @@ export default function DonorDashboard() {
   useEffect(() => { const o = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = o; }; }, []);
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(""), 3500); return () => clearTimeout(t); }, [notice]);
 
+  /* ---------- backend: donor data load ---------- */
+  const loadDonor = async () => {
+    const [me, hist, reqs] = await Promise.all([getMyDonor(), getMyHistory(), getMyRequests().catch(() => [])]);
+    setRequests(reqs.map(toRequest));
+    const p = toProfile(me);
+    setProfile(p);
+    setSavedProfile(p);
+    setAvailable(me.isAvailable);
+    setAvatar(me.avatar || "");
+    setMyLoc(me.location || null);
+    setStats(me.stats);
+    setHistory(hist.map((h) => ({ id: h.id, date: h.date.slice(0, 10), group: h.bloodGroup || me.bloodGroup || "", hospital: h.hospitalName })));
+  };
+  useEffect(() => {
+    let alive = true;
+    loadDonor().catch((e) => { if (alive) setNotice(e.message); });
+    return () => { alive = false; };
+  }, []);
+
+  /* ---------- backend: messages ---------- */
+  const loadChats = async () => {
+    const list = await getConversations();
+    setChats((prev) => list.map((c) => {
+      const old = prev.find((p) => p.id === c.userId);
+      return { id: c.userId, name: c.name, role: c.role, loaded: !!old?.loaded, msgs: old?.loaded ? old.msgs : [{ from: c.lastFromMe ? "me" : "them", text: c.lastMessage }] };
+    }));
+    setChatId((cur) => cur || (list[0] ? list[0].userId : null));
+  };
+  const loadThread = async (id) => {
+    const msgs = await getThread(id);
+    setChats((c) => c.map((x) => (x.id === id ? { ...x, loaded: true, msgs: msgs.map((m) => ({ from: m.mine ? "me" : "them", text: m.text })) } : x)));
+  };
+  useEffect(() => {
+    if (active !== "Messages") return;
+    const tick = () => { loadChats().catch(() => {}); if (chatId) loadThread(chatId).catch(() => {}); };
+    tick();
+    const t = setInterval(tick, 5000);
+    return () => clearInterval(t);
+  }, [active, chatId]);
+
+  const toggleAvailable = async () => {
+    const nextVal = !available;
+    setAvailable(nextVal);
+    try {
+      await setMyAvailability(nextVal);
+      setNotice(nextVal ? "You are now available for donations." : "You are now unavailable for donations.");
+    } catch (e) { setAvailable(!nextVal); setNotice(e.message); }
+  };
+
   const unread = notifs.filter((n) => !n.read).length;
-  const last = history[0].date;
-  const next = new Date(d(last).getTime() + 92 * 864e5).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
-  const acceptedN = 2 + requests.filter((r) => r.status === "accepted").length;
-  const declinedN = 1 + requests.filter((r) => r.status === "declined").length;
+  const last = stats?.lastDonationDate ? stats.lastDonationDate.slice(0, 10) : history[0]?.date || null;
+  const isEligible = stats ? stats.isEligible : true;
+  const next = stats?.nextEligibleDate ? fmtLong(stats.nextEligibleDate.slice(0, 10)) : "Now";
+  const acceptedN = requests.filter((r) => r.status === "accepted").length;
+  const declinedN = requests.filter((r) => r.status === "declined").length;
+  const lives = stats ? stats.livesImpacted : history.length * 3;
   const go = (label) => { setActive(label); setMenu(false); setModal(null); window.scrollTo?.(0, 0); };
   const addNotif = (title, text) => setNotifs((n) => [{ id: Date.now(), icon: "heart", title, text, time: "Just now", read: false }, ...n]);
 
-  const respond = (r, status) => {
+  const respond = async (r, status) => {
+    try { await respondToRequest(r.id, status); } catch (e) { setNotice(e.message); setModal(null); return; }
     setRequests((rs) => rs.map((x) => (x.id === r.id ? { ...x, status } : x)));
     try { localStorage.setItem("bc_last_donor_response", JSON.stringify({ requestId: r.id, status, title: reqTitle(r), at: new Date().toISOString() })); } catch (e) { /* ignore */ }
     if (status === "accepted") { addNotif("Request accepted", reqTitle(r)); setNotice("Request accepted. Recipient response recorded and notification queued."); }
@@ -136,14 +207,58 @@ export default function DonorDashboard() {
   const reschedule = (id, f) => { setAppts((a) => a.map((x) => (x.id === id ? { ...x, ...f } : x))); setNotice("Appointment rescheduled."); setModal(null); };
   const cancelAppt = (id) => { setAppts((a) => a.filter((x) => x.id !== id)); setNotice("Appointment cancelled."); setModal(null); };
   const openNotif = (n) => { setNotifs((l) => l.map((x) => (x.id === n.id ? { ...x, read: true } : x))); };
-  const send = () => {
-    const t = draft.trim(); if (!t) return;
-    setChats((c) => c.map((x) => (x.id === chatId ? { ...x, msgs: [...x.msgs, { from: "me", text: t }] } : x)));
-    setDraft("");
-    const id = chatId;
-    setTimeout(() => setChats((c) => c.map((x) => (x.id === id ? { ...x, msgs: [...x.msgs, { from: "them", text: "Thanks for your message. We will get back to you shortly." }] } : x))), 1200);
+  const send = async () => {
+    const t = draft.trim(); if (!t || !chatId) return;
+    try { await sendMessage(chatId, t); setDraft(""); await loadThread(chatId); } catch (e) { setNotice(e.message); }
   };
-  const saveProfile = () => { setEditing(false); setNotice("Profile updated successfully."); };
+  const saveProfile = async () => {
+    const payload = { address: profile.address, dateOfBirth: profile.dob, weightKg: profile.weight };
+    if (profile.phone) payload.phone = profile.phone;
+    if (profile.group) payload.bloodGroup = profile.group;
+    try {
+      const me = await updateMyDonor(payload);
+      const p = toProfile(me);
+      setProfile(p);
+      setSavedProfile(p);
+      setStats(me.stats);
+      setEditing(false);
+      setNotice("Profile updated successfully.");
+    } catch (e) { setNotice(e.message); }
+  };
+
+  const pickAvatar = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = async () => {
+      const size = 256, canvas = document.createElement("canvas");
+      canvas.width = size; canvas.height = size;
+      const m = Math.min(img.width, img.height);
+      canvas.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      try { setAvatar(await setMyAvatar(canvas.toDataURL("image/jpeg", 0.8))); setNotice("Profile photo updated."); }
+      catch (err) { setNotice(err.message); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); setNotice("Could not read this image."); };
+    img.src = url;
+  };
+
+  const shareLocation = () => {
+    if (!navigator.geolocation) return setNotice("Your browser does not support location.");
+    navigator.geolocation.getCurrentPosition(
+      async (p) => {
+        try { setMyLoc(await setMyLocation(p.coords.latitude, p.coords.longitude)); setNotice("Location saved. It will show on the Find Donor map."); }
+        catch (e) { setNotice(e.message); }
+      },
+      () => setNotice("Could not get your location. Please allow location access in the browser."),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+  const removeLocation = async () => {
+    try { await setMyLocation(null, null); setMyLoc(null); setNotice("Location removed from the map."); } catch (e) { setNotice(e.message); }
+  };
 
   const reqButton = (r) => {
     if (r.status !== "pending") return <button className="dd-view" disabled><span className="dd-st">{r.status === "accepted" ? "Accepted" : "Declined"}</span></button>;
@@ -158,9 +273,9 @@ export default function DonorDashboard() {
     <>
       <section className="dd-top-grid"><div className="dd-left-col">
       <div className="dd-summary-grid">
-        <article className="dd-summary dd-pink" onClick={() => go("Donation History")}><span className="dd-summary-icon"><Icon name="drop" size={30} /></span><div><small>Total Donations</small><strong>{history.length}</strong><p>Last donation:<br />{fmtLong(last)}</p></div></article>
+        <article className="dd-summary dd-pink" onClick={() => go("Donation History")}><span className="dd-summary-icon"><Icon name="drop" size={30} /></span><div><small>Total Donations</small><strong>{stats ? stats.totalDonations : history.length}</strong><p>Last donation:<br />{fmtLong(last)}</p></div></article>
         <article className="dd-summary dd-blue" onClick={() => go("Blood Requests")}><span className="dd-summary-icon"><Icon name="mail" size={22} /></span><div><small>Requests Responded</small><strong>{acceptedN + declinedN}</strong><p>{acceptedN} accepted<br />{declinedN} declined</p></div></article>
-        <article className="dd-summary dd-yellow" onClick={() => setModal({ type: "lives" })}><span className="dd-summary-icon"><Icon name="people" size={32} /></span><div><small>Lives Impacted</small><strong>{history.length * 3}+</strong><p>Each donation can<br />help up to 3 lives</p></div></article>
+        <article className="dd-summary dd-yellow" onClick={() => setModal({ type: "lives" })}><span className="dd-summary-icon"><Icon name="people" size={32} /></span><div><small>Lives Impacted</small><strong>{lives}+</strong><p>Each donation can<br />help up to 3 lives</p></div></article>
         <article className="dd-summary dd-green" onClick={() => go("Appointments")}><span className="dd-summary-icon"><Icon name="calendar" size={30} /></span><div><small>Upcoming Appointment</small><strong className="dd-date">{appts[0] ? fmt(appts[0].date) : "None"}</strong><p>{appts[0] ? appts[0].hospital.replace(", ", ",\u00a0").split(",")[0] + ",\nChattogram" : "Book one now"}</p></div><span className="dd-go"><Icon name="arrow" size={14} /></span></article>
       </div>
         <article className="dd-panel dd-requests-panel">
@@ -177,14 +292,14 @@ export default function DonorDashboard() {
         </article>
         </div>
         <aside className="dd-panel dd-right-panel">
-          <div className="dd-panel-heading"><h2>My Availability</h2><button className={`dd-toggle ${available ? "on" : ""}`} onClick={() => { setAvailable((v) => !v); setNotice(available ? "You are now unavailable for donations." : "You are now available for donations."); }} aria-label="Toggle availability" aria-pressed={available}><span /></button></div>
+          <div className="dd-panel-heading"><h2>My Availability</h2><button className={`dd-toggle ${available ? "on" : ""}`} onClick={toggleAvailable} aria-label="Toggle availability" aria-pressed={available}><span /></button></div>
           <div className="dd-availability-line"><p>Let hospitals know when you can donate.</p></div>
           <div className="dd-panel-divider" />
-          <div className="dd-panel-heading"><h2>Eligibility Status</h2><span className="dd-eligible"><Icon name="check" size={13} /> Eligible</span></div>
-          <div className="dd-detail-line"><span><Icon name="drop" size={14} />Blood Group</span><b>{profile.group}</b></div>
+          <div className="dd-panel-heading"><h2>Eligibility Status</h2><span className="dd-eligible"><Icon name="check" size={13} /> {isEligible ? "Eligible" : "Not yet eligible"}</span></div>
+          <div className="dd-detail-line"><span><Icon name="drop" size={14} />Blood Group</span><b>{profile.group || "-"}</b></div>
           <div className="dd-detail-line"><span><Icon name="history" size={14} />Last Donation</span><b>{fmtLong(last)}</b></div>
           <div className="dd-detail-line"><span><Icon name="calendar" size={14} />Next Eligible Date</span><b>{next}</b></div>
-          <div className="dd-info-box"><Icon name="info" size={18} /><span>You are eligible to donate again in 92 days.</span></div>
+          <div className="dd-info-box"><Icon name="info" size={18} /><span>{isEligible ? "You are eligible to donate now." : `You are eligible to donate again in ${stats?.daysUntilEligible ?? 0} days.`}</span></div>
           <div className="dd-panel-divider" />
           <h2 className="dd-quick-title">Quick Actions</h2>
           <div className="dd-quick-actions">
@@ -208,6 +323,7 @@ export default function DonorDashboard() {
         </article>
         <article className="dd-panel dd-bottom-panel">
           <div className="dd-panel-heading"><h2>Donation History</h2><button onClick={() => go("Donation History")}>View All</button></div>
+          {history.length === 0 && <p className="dd-empty">No donations recorded yet.</p>}
           {history.slice(0, 3).map((h) => <div className="dd-history-row" key={h.id}><span>{fmt(h.date)}</span><b>{h.group}</b><span>{h.hospital}</span><em><Icon name="check" size={11} /> Completed</em></div>)}
         </article>
         <article className="dd-panel dd-bottom-panel">
@@ -221,13 +337,13 @@ export default function DonorDashboard() {
   const Profile = (
     <section className="dd-page">
       <div className="dd-page-head"><div><h1>My Profile</h1><p>Keep your details up to date so hospitals can reach you.</p></div>
-        {editing ? <div className="dd-row"><button className="dd-btn dd-btn-outline" onClick={() => { setProfile(initProfile); setEditing(false); }}>Cancel</button><button className="dd-btn dd-btn-primary" onClick={saveProfile}>Save changes</button></div> : <button className="dd-btn dd-btn-primary" onClick={() => setEditing(true)}>Edit profile</button>}
+        {editing ? <div className="dd-row"><button className="dd-btn dd-btn-outline" onClick={() => { setProfile(savedProfile); setEditing(false); }}>Cancel</button><button className="dd-btn dd-btn-primary" onClick={saveProfile}>Save changes</button></div> : <button className="dd-btn dd-btn-primary" onClick={() => setEditing(true)}>Edit profile</button>}
       </div>
       <div className="dd-panel dd-profile">
-        <div className="dd-avatar-col"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt={profile.name} /><b>{profile.name}</b><span className="dd-eligible">Blood group {profile.group}</span></div>
+        <div className="dd-avatar-col"><img src={avatar || DEFAULT_AVATAR} alt={profile.name} /><b>{profile.name}</b><span className="dd-eligible">Blood group {profile.group}</span><label className="dd-btn dd-btn-outline" style={{ cursor: "pointer" }}>Change photo<input type="file" accept="image/*" hidden onChange={pickAvatar} /></label><button className="dd-btn dd-btn-outline" onClick={myLoc ? removeLocation : shareLocation}>{myLoc ? "Remove my map location" : "Share my location on map"}</button></div>
         <div className="dd-form dd-grid2">
           {[["name", "Full name", "text"], ["email", "Email", "email"], ["phone", "Phone", "tel"], ["dob", "Date of birth", "date"], ["weight", "Weight (kg)", "number"], ["address", "Address", "text"]].map(([k, l, t]) => (
-            <label className="dd-field" key={k}>{l}<input type={t} value={profile[k]} disabled={!editing} onChange={(e) => setProfile({ ...profile, [k]: e.target.value })} /></label>
+            <label className="dd-field" key={k}>{l}<input type={t} value={profile[k]} disabled={!editing || k === "name" || k === "email"} onChange={(e) => setProfile({ ...profile, [k]: e.target.value })} /></label>
           ))}
           <label className="dd-field">Blood group<select disabled={!editing} value={profile.group} onChange={(e) => setProfile({ ...profile, group: e.target.value })}>{["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((g) => <option key={g}>{g}</option>)}</select></label>
         </div>
@@ -294,11 +410,11 @@ export default function DonorDashboard() {
       <div className="dd-page-head"><div><h1>Messages</h1><p>Talk to hospitals and requesters.</p></div></div>
       <div className="dd-panel dd-chat">
         <div className="dd-chat-list">{chats.map((c) => <button key={c.id} className={c.id === chatId ? "on" : ""} onClick={() => setChatId(c.id)}><b>{c.name}</b><span>{c.msgs[c.msgs.length - 1].text}</span></button>)}</div>
-        <div className="dd-chat-main">
+        {!chat ? <div className="dd-chat-main"><p className="dd-empty">No messages yet. Requesters can message you from the Find Donor page.</p></div> : <div className="dd-chat-main">
           <div className="dd-chat-title"><b>{chat.name}</b><span>{chat.role}</span></div>
           <div className="dd-chat-body">{chat.msgs.map((m, i) => <div key={i} className={`dd-msg ${m.from}`}>{m.text}</div>)}</div>
           <div className="dd-chat-input"><input value={draft} placeholder="Type a message" onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} /><button className="dd-btn dd-btn-primary" onClick={send}><Icon name="send" size={16} /> Send</button></div>
-        </div>
+        </div>}
       </div>
     </section>
   );
@@ -340,7 +456,7 @@ export default function DonorDashboard() {
             <button className="dd-bell" aria-label="Notifications" onClick={() => go("Notifications")}><Icon name="bell" size={21} />{unread > 0 && <i>{unread}</i>}</button>
             <div className="dd-user-wrap">
               <button className="dd-user" onClick={() => setMenu((m) => !m)} aria-haspopup="menu" aria-expanded={menu}>
-                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt={profile.name} />
+                <img src={avatar || DEFAULT_AVATAR} alt={profile.name} />
                 <div><b>{profile.name}</b><span>Donor</span></div><span className="dd-chevron">⌄</span>
               </button>
               {menu && <div className="dd-menu" role="menu"><button onClick={() => go("My Profile")}>My Profile</button><button onClick={() => go("Settings")}>Settings</button><Link to="/">Logout</Link></div>}
@@ -364,8 +480,8 @@ export default function DonorDashboard() {
       {modal?.type === "book" && <Modal title="Book appointment" onClose={() => setModal(null)}><ApptForm initial={{ hospital: "City Hospital, Chattogram", date: "", time: "10:00 AM - 11:00 AM" }} submitLabel="Book appointment" onSubmit={addAppt} onCancel={() => setModal(null)} /></Modal>}
       {modal?.type === "reschedule" && ma && <Modal title="Reschedule appointment" onClose={() => setModal(null)}><ApptForm initial={{ hospital: ma.hospital, date: ma.date, time: ma.time }} submitLabel="Save new time" onSubmit={(f) => reschedule(ma.id, f)} onCancel={() => setModal(null)} /></Modal>}
       {modal?.type === "cancel" && ma && <Modal title="Cancel appointment?" onClose={() => setModal(null)}><p className="dd-note">{ma.hospital} on {fmt(ma.date)} will be cancelled.</p><div className="dd-modal-actions"><button className="dd-btn dd-btn-outline" onClick={() => setModal(null)}>Keep it</button><button className="dd-btn dd-btn-danger" onClick={() => cancelAppt(ma.id)}>Cancel appointment</button></div></Modal>}
-      {modal?.type === "refer" && <Modal title="Refer a friend" onClose={() => setModal(null)}><p className="dd-note">Share this link. Every friend who donates helps save more lives.</p><div className="dd-copy"><input readOnly value="https://bloodconnect.app/join?ref=nafisa" /><button className="dd-btn dd-btn-primary" onClick={() => { try { navigator.clipboard.writeText("https://bloodconnect.app/join?ref=nafisa"); } catch (e) { /* ignore */ } setNotice("Referral link copied."); setModal(null); }}>Copy link</button></div></Modal>}
-      {modal?.type === "lives" && <Modal title="Lives impacted" onClose={() => setModal(null)}><p className="dd-note">You have made {history.length} donations. Each donation can help up to 3 patients, so you have helped about {history.length * 3} people.</p><div className="dd-modal-actions"><button className="dd-btn dd-btn-primary" onClick={() => setModal(null)}>Close</button></div></Modal>}
+      {modal?.type === "refer" && <Modal title="Refer a friend" onClose={() => setModal(null)}><p className="dd-note">Share this link. Every friend who donates helps save more lives.</p><div className="dd-copy"><input readOnly value="https://bloodconnect.app/join?ref=donor" /><button className="dd-btn dd-btn-primary" onClick={() => { try { navigator.clipboard.writeText("https://bloodconnect.app/join?ref=donor"); } catch (e) { /* ignore */ } setNotice("Referral link copied."); setModal(null); }}>Copy link</button></div></Modal>}
+      {modal?.type === "lives" && <Modal title="Lives impacted" onClose={() => setModal(null)}><p className="dd-note">You have made {stats ? stats.totalDonations : history.length} donations. Each donation can help up to 3 patients, so you have helped about {lives} people.</p><div className="dd-modal-actions"><button className="dd-btn dd-btn-primary" onClick={() => setModal(null)}>Close</button></div></Modal>}
       {modal?.type === "password" && <Modal title="Change password" onClose={() => setModal(null)}><div className="dd-form"><label className="dd-field">Current password<input type="password" /></label><label className="dd-field">New password<input type="password" /></label><div className="dd-modal-actions"><button className="dd-btn dd-btn-outline" onClick={() => setModal(null)}>Cancel</button><button className="dd-btn dd-btn-primary" onClick={() => { setModal(null); setNotice("Password updated."); }}>Update password</button></div></div></Modal>}
       {modal?.type === "delete" && <Modal title="Delete account?" onClose={() => setModal(null)}><p className="dd-note">This is a demo. No data will be deleted.</p><div className="dd-modal-actions"><button className="dd-btn dd-btn-outline" onClick={() => setModal(null)}>Cancel</button><button className="dd-btn dd-btn-danger" onClick={() => { setModal(null); setNotice("Demo only: account not deleted."); }}>Delete</button></div></Modal>}
     </div>
