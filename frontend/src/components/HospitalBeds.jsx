@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import {
   Building2,
@@ -15,79 +15,6 @@ import {
   CalendarDays,
   Heart,
 } from "lucide-react";
-
-const hospitals = [
-  {
-    id: 1,
-    name: "Chattogram Medical College Hospital",
-    area: "Chawkbazar",
-    general: 42,
-    icu: 8,
-    dist: 2.1,
-    blood: "Available",
-    phone: "031-642100",
-    type: "Government Hospital",
-    address: "Chawkbazar, Chattogram-4203",
-    depts: ["Emergency", "General", "ICU", "Surgery", "Maternity"],
-    img: "/images/hospital-1.jpg",
-  },
-  {
-    id: 2,
-    name: "Chittagong General Hospital",
-    area: "Agrabad",
-    general: 28,
-    icu: 5,
-    dist: 3.4,
-    blood: "Available",
-    phone: "031-2556001",
-    type: "Private Hospital",
-    address: "Agrabad, Chattogram-4100",
-    depts: ["Emergency", "General", "ICU", "Surgery"],
-    img: "/images/hospital-2.jpg",
-  },
-  {
-    id: 3,
-    name: "Parkview Hospital",
-    area: "Nasirabad",
-    general: 16,
-    icu: 3,
-    dist: 5.6,
-    blood: "Limited",
-    phone: "01819-332211",
-    type: "Private Hospital",
-    address: "Nasirabad, Chattogram-4210",
-    depts: ["Emergency", "General", "ICU", "Maternity"],
-    img: "/images/hospital-3.jpg",
-  },
-  {
-    id: 4,
-    name: "Aga Khan Hospital",
-    area: "Pahartali",
-    general: 24,
-    icu: 6,
-    dist: 6.8,
-    blood: "Available",
-    phone: "031-2854000",
-    type: "Private Hospital",
-    address: "Pahartali, Chattogram-4202",
-    depts: ["Emergency", "General", "ICU", "Surgery", "Maternity"],
-    img: "/images/hospital-4.jpg",
-  },
-  {
-    id: 5,
-    name: "B. Barua Hospital",
-    area: "Halishahar",
-    general: 10,
-    icu: 2,
-    dist: 7.2,
-    blood: "Available",
-    phone: "031-747890",
-    type: "Private Hospital",
-    address: "Halishahar, Chattogram-4216",
-    depts: ["Emergency", "General"],
-    img: "/images/hospital-5.jpg",
-  },
-];
 
 const areas = [
   "Chawkbazar",
@@ -217,14 +144,28 @@ function FallbackMap() {
 const fieldCls = "w-full bg-transparent text-[13px] text-gray-600 outline-none";
 
 export default function HospitalBeds() {
+  const [hospitals, setHospitals] = useState([]);
   const [name, setName] = useState("");
   const [area, setArea] = useState("");
   const [dept, setDept] = useState("");
   const [bedType, setBedType] = useState("all");
   const [sortBy, setSortBy] = useState("distance");
-  const [selectedId, setSelectedId] = useState(1);
+  const [selectedId, setSelectedId] = useState(null);
   const [heroOk, setHeroOk] = useState(true);
   const [mapOk, setMapOk] = useState(true);
+
+  // Fetching live hospitals data from backend API connected to MongoDB Atlas
+  useEffect(() => {
+    fetch("http://localhost:5000/api/hospitals")
+      .then((res) => res.json())
+      .then((data) => {
+        setHospitals(data);
+        if (data.length > 0) {
+          setSelectedId(data[0]._id || data[0].id);
+        }
+      })
+      .catch((err) => console.error("Error fetching hospitals from backend:", err));
+  }, []);
 
   const list = useMemo(() => {
     const q = name.trim().toLowerCase();
@@ -232,22 +173,24 @@ export default function HospitalBeds() {
     const filtered = hospitals.filter((h) => {
       if (q && !h.name.toLowerCase().includes(q)) return false;
       if (area && h.area !== area) return false;
-      if (dept && !h.depts.includes(dept)) return false;
+      if (dept && h.depts && !h.depts.includes(dept)) return false;
       if (bedType === "general" && h.general <= 0) return false;
       if (bedType === "icu" && h.icu <= 0) return false;
       return true;
     });
 
     return filtered.sort((a, b) => {
-      if (sortBy === "distance") return a.dist - b.dist;
+      const distA = a.dist || 0;
+      const distB = b.dist || 0;
+      if (sortBy === "distance") return distA - distB;
       if (sortBy === "general") return b.general - a.general;
       if (sortBy === "icu") return b.icu - a.icu;
       return a.name.localeCompare(b.name);
     });
-  }, [name, area, dept, bedType, sortBy]);
+  }, [hospitals, name, area, dept, bedType, sortBy]);
 
   const selected =
-    list.find((h) => h.id === selectedId) || list[0] || null;
+    list.find((h) => h._id === selectedId || h.id === selectedId) || list[0] || null;
 
   const gridCols =
     "md:grid-cols-[2.4fr_1.3fr_0.9fr_1.1fr_1.4fr_1fr]";
@@ -373,7 +316,7 @@ export default function HospitalBeds() {
 
             <button
               type="button"
-              onClick={() => setSelectedId(list[0]?.id ?? null)}
+              onClick={() => setSelectedId(list[0]?._id || list[0]?.id || null)}
               className="flex h-[48px] items-center justify-center gap-2 rounded-lg bg-[#d90f1f] px-6 text-sm font-semibold text-white transition hover:bg-[#b80a18] sm:col-span-2 xl:col-span-1"
             >
               <Search size={16} />
@@ -423,12 +366,13 @@ export default function HospitalBeds() {
             </div>
 
             {list.map((h) => {
-              const isSel = selected && h.id === selected.id;
+              const hid = h._id || h.id;
+              const isSel = selected && (selected._id === hid || selected.id === hid);
 
               return (
                 <div
-                  key={h.id}
-                  onClick={() => setSelectedId(h.id)}
+                  key={hid}
+                  onClick={() => setSelectedId(hid)}
                   className={`grid cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-[13px] transition ${gridCols} ${
                     isSel
                       ? "border-[#f7c4c4] bg-[#fdeceb]"
@@ -467,7 +411,7 @@ export default function HospitalBeds() {
 
                   <div className="flex items-center gap-1.5">
                     <MapPin size={15} className="text-[#d90f1f]" />
-                    {h.dist} km
+                    {h.dist || 0} km
                   </div>
 
                   <div>
@@ -491,7 +435,7 @@ export default function HospitalBeds() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedId(h.id);
+                        setSelectedId(hid);
                       }}
                       className={`rounded-lg border border-[#d90f1f] px-4 py-2.5 text-[13px] font-semibold transition ${
                         isSel
@@ -574,7 +518,7 @@ export default function HospitalBeds() {
                   <MapPin size={13} className="text-[#d90f1f]" />
                   {selected.area}, Chattogram
                 </span>
-                <span>{selected.dist} km away</span>
+                <span>{selected.dist || 0} km away</span>
               </div>
 
               <div className="my-3.5 grid grid-cols-3 gap-1.5 rounded-xl border border-[#eceef3] p-2.5">
@@ -631,15 +575,15 @@ export default function HospitalBeds() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Building2 size={15} />
-                  {selected.depts.join(", ")}
+                  {selected.depts ? selected.depts.join(", ") : "General, ICU"}
                 </li>
                 <li className="flex items-center gap-2.5">
                   <ShieldCheck size={15} />
-                  {selected.type}
+                  {selected.type || "Hospital Partner"}
                 </li>
                 <li className="flex items-center gap-2.5">
                   <MapPin size={15} />
-                  {selected.address}
+                  {selected.address || selected.area + ", Chattogram"}
                 </li>
               </ul>
 

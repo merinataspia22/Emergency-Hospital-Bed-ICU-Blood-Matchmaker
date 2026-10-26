@@ -1,13 +1,4 @@
-import { useState } from "react";
-
-/* ---------- Data (later replace with API data) ---------- */
-const stats = [
-  { label: "Total Users", value: "1,254", change: "12%", icon: "👥", color: "#2f6df6" },
-  { label: "Registered Donors", value: "892", change: "8%", icon: "🩸", color: "#d90f1f" },
-  { label: "Blood Requests", value: "156", change: "18%", icon: "📄", color: "#f5a50b" },
-  { label: "Completed Donations", value: "320", change: "25%", icon: "✔", color: "#16a34a" },
-  { label: "Hospital Partners", value: "42", change: "5%", icon: "🏢", color: "#7c4dff" },
-];
+import { useState, useEffect } from "react";
 
 const trend = {
   labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -22,28 +13,6 @@ const groups = [
   { name: "A-", pct: 8, color: "#8e5bd9" },
   { name: "B-", pct: 6, color: "#7a8793" },
   { name: "AB+", pct: 4, color: "#4cb782" },
-];
-
-const requests = [
-  { text: "A+ blood needed at Chattogram Medical", units: "2 Units", level: "Urgent", time: "2 hours ago" },
-  { text: "O- blood needed at Aga Khan Hospital", units: "1 Unit", level: "Normal", time: "5 hours ago" },
-  { text: "B+ blood needed at Chittagong General", units: "3 Units", level: "Urgent", time: "1 day ago" },
-];
-
-const users = [
-  { name: "Nafisa Alam", type: "Donor", loc: "Chattogram", joined: "12 Jun 2025" },
-  { name: "Tawhid Hasan", type: "Donor", loc: "Hathazari", joined: "11 Jun 2025" },
-  { name: "Sadia Rahman", type: "Donor", loc: "Pahartali", joined: "10 Jun 2025" },
-  { name: "Dr. Arif Hossain", type: "Hospital", loc: "Chattogram", joined: "09 Jun 2025" },
-  { name: "Karim Chowdhury", type: "Donor", loc: "Boalkhali", joined: "08 Jun 2025" },
-];
-
-const partners = [
-  { name: "Chattogram Medical", loc: "Chattogram", donations: 120 },
-  { name: "Aga Khan Hospital", loc: "Hathazari", donations: 85 },
-  { name: "Chittagong General", loc: "Pahartali", donations: 64 },
-  { name: "Parkview Hospital", loc: "Boalkhali", donations: 38 },
-  { name: "City Hospital", loc: "Chattogram", donations: 42 },
 ];
 
 const controls = [
@@ -66,7 +35,7 @@ const navItems = [
   { label: "Settings", icon: "⚙️" },
 ];
 
-const initials = (n) =>
+const initials = (n = "") =>
   n.replace("Dr. ", "").split(" ").map((w) => w[0]).slice(0, 2).join("");
 
 /* ---------- Small reusable pieces ---------- */
@@ -143,6 +112,84 @@ function LineChart({ labels, values }) {
 export default function AdminDashboard() {
   const [active, setActive] = useState("Dashboard");
   const [range, setRange] = useState(6);
+  
+  const [stats, setStats] = useState([
+    { label: "Total Users", value: "0", change: "12%", icon: "👥", color: "#2f6df6" },
+    { label: "Registered Donors", value: "0", change: "8%", icon: "🩸", color: "#d90f1f" },
+    { label: "Blood Requests", value: "0", change: "18%", icon: "📄", color: "#f5a50b" },
+    { label: "Completed Donations", value: "0", change: "25%", icon: "✔", color: "#16a34a" },
+    { label: "Hospital Partners", value: "0", change: "5%", icon: "🏢", color: "#7c4dff" },
+  ]);
+
+  const [partners, setPartners] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState([]);
+
+  // Fetching live data directly from MongoDB Atlas backend
+  useEffect(() => {
+    // 1. Fetch Hospital Partners
+    fetch("http://localhost:5000/api/hospitals")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const mappedPartners = data.map((h) => ({
+            name: h.name,
+            loc: h.area || h.address || "Chattogram",
+            donations: h.general ? h.general * 2 : (h.icu ? h.icu * 5 : 12),
+          }));
+          setPartners(mappedPartners);
+          
+          setStats((prev) =>
+            prev.map((s) =>
+              s.label === "Hospital Partners" ? { ...s, value: String(data.length) } : s
+            )
+          );
+        }
+      })
+      .catch((err) => console.error("Error fetching hospitals:", err));
+
+    // 2. Fetch Users from MongoDB Atlas
+    fetch("http://localhost:5000/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const mappedUsers = data.map((u) => ({
+            name: u.name || "User",
+            type: u.type || u.role || "Donor",
+            loc: u.loc || u.location || "Chattogram",
+            joined: u.joined || (u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "Recently"),
+          }));
+          setUsers(mappedUsers);
+
+          const donorCount = data.filter(u => (u.type === 'Donor' || u.role === 'donor')).length;
+
+          setStats((prev) =>
+            prev.map((s) => {
+              if (s.label === "Total Users") return { ...s, value: String(data.length) };
+              if (s.label === "Registered Donors") return { ...s, value: String(donorCount || data.length) };
+              return s;
+            })
+          );
+        }
+      })
+      .catch((err) => console.error("Error fetching users:", err));
+
+    // 3. Fetch Overview Stats
+    fetch("http://localhost:5000/api/admin/overview")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setStats((prev) =>
+            prev.map((s) => {
+              if (s.label === "Blood Requests" && data.bloodRequests !== undefined) return { ...s, value: String(data.bloodRequests) };
+              if (s.label === "Completed Donations" && data.completedDonations !== undefined) return { ...s, value: String(data.completedDonations) };
+              return s;
+            })
+          );
+        }
+      })
+      .catch((err) => console.error("Error fetching overview stats:", err));
+  }, []);
 
   const total = groups.reduce((a, g) => a + g.pct, 0);
   let acc = 0;
@@ -307,24 +354,28 @@ export default function AdminDashboard() {
               </Card>
 
               <Card title="Recent Blood Requests" icon="🕒" action={<ViewAll />}>
-                {requests.map((r) => (
-                  <div key={r.text} className="flex items-center gap-2.5 border-b border-[#eceef3] py-2.5 last:border-0">
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#fdeceb] text-[#d90f1f]">
-                      🩸
+                {requests.length > 0 ? (
+                  requests.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2.5 border-b border-[#eceef3] py-2.5 last:border-0">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#fdeceb] text-[#d90f1f]">
+                        🩸
+                      </div>
+                      <div className="flex-1 text-xs font-semibold">
+                        {r.text}
+                        <small className="mt-0.5 block font-medium text-gray-500">
+                          {r.units} •{" "}
+                          <span className={r.level === "Urgent" ? "text-[#d90f1f]" : ""}>{r.level}</span>
+                        </small>
+                      </div>
+                      <time className="text-[11px] text-gray-500">{r.time}</time>
+                      <button className="rounded-lg bg-[#d90f1f] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#b80a18]">
+                        View
+                      </button>
                     </div>
-                    <div className="flex-1 text-xs font-semibold">
-                      {r.text}
-                      <small className="mt-0.5 block font-medium text-gray-500">
-                        {r.units} •{" "}
-                        <span className={r.level === "Urgent" ? "text-[#d90f1f]" : ""}>{r.level}</span>
-                      </small>
-                    </div>
-                    <time className="text-[11px] text-gray-500">{r.time}</time>
-                    <button className="rounded-lg bg-[#d90f1f] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#b80a18]">
-                      View
-                    </button>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="py-4 text-center text-xs text-gray-500">No recent blood requests found.</p>
+                )}
               </Card>
             </section>
 
@@ -340,22 +391,28 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((u) => (
-                      <tr key={u.name} className="border-b border-[#eceef3] last:border-0">
-                        <td className="p-2">
-                          <div className="flex items-center gap-2 font-medium">
-                            <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-[10px] font-semibold text-white">
-                              {initials(u.name)}
-                            </span>
-                            {u.name}
-                          </div>
-                        </td>
-                        <td className="p-2">{u.type}</td>
-                        <td className="p-2">{u.loc}</td>
-                        <td className="p-2"><ActiveBadge /></td>
-                        <td className="p-2">{u.joined}</td>
+                    {users.length > 0 ? (
+                      users.map((u, i) => (
+                        <tr key={i} className="border-b border-[#eceef3] last:border-0">
+                          <td className="p-2">
+                            <div className="flex items-center gap-2 font-medium">
+                              <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-gradient-to-br from-slate-300 to-slate-500 text-[10px] font-semibold text-white">
+                                {initials(u.name)}
+                              </span>
+                              {u.name}
+                            </div>
+                          </td>
+                          <td className="p-2">{u.type}</td>
+                          <td className="p-2">{u.loc}</td>
+                          <td className="p-2"><ActiveBadge /></td>
+                          <td className="p-2">{u.joined}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="p-4 text-center text-xs text-gray-500">Loading users from Atlas...</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </Card>
@@ -370,19 +427,25 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {partners.map((p) => (
-                      <tr key={p.name} className="border-b border-[#eceef3] last:border-0">
-                        <td className="p-2">
-                          <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-md bg-[#d90f1f] text-[11px] text-white">
-                            🏢
-                          </span>
-                          {p.name}
-                        </td>
-                        <td className="p-2">{p.loc}</td>
-                        <td className="p-2">{p.donations}</td>
-                        <td className="p-2"><ActiveBadge /></td>
+                    {partners.length > 0 ? (
+                      partners.map((p, i) => (
+                        <tr key={i} className="border-b border-[#eceef3] last:border-0">
+                          <td className="p-2">
+                            <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-md bg-[#d90f1f] text-[11px] text-white">
+                              🏢
+                            </span>
+                            {p.name}
+                          </td>
+                          <td className="p-2">{p.loc}</td>
+                          <td className="p-2">{p.donations}</td>
+                          <td className="p-2"><ActiveBadge /></td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="p-4 text-center text-xs text-gray-500">Loading hospitals from Atlas...</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </Card>
