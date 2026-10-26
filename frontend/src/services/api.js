@@ -36,7 +36,7 @@ export async function apiRequest(
   let response;
 
   try {
-    response = await fetch(`/api${path}`, {
+    response = await fetch(`http://localhost:5000/api${path}`, {
       method,
       headers,
       ...(body !== undefined
