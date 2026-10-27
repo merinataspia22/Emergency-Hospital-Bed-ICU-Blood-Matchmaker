@@ -5,7 +5,7 @@ export const notFound = (req, _res, next) => {
 };
 
 export const errorHandler = (err, _req, res, _next) => {
-  let status = err.statusCode || 500;
+  let status = err.statusCode || err.status || 500;
   let message = err.message || "Server error";
   let errors;
 
