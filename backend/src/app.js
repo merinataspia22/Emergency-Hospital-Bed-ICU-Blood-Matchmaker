@@ -3,6 +3,7 @@ import cors from "cors";
 import bloodRequestRoutes from "./routes/bloodRequest.routes.js";
 import { notFound, errorHandler } from "./middleware/error.middleware.js"; 
 import authRoutes from "./routes/auth.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get("/api/health", (_req, res) => res.json({ success: true, message: "API is
  // ---- routes ----
 app.use("/api/auth", authRoutes);
 app.use("/api/blood-requests", bloodRequestRoutes);
+app.use("/api/contact", contactRoutes);
 
 
 app.use(notFound);

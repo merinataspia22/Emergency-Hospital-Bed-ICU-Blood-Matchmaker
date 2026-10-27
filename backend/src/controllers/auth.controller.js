@@ -105,3 +105,10 @@ export const login = asyncHandler(async (req, res) => {
     accessToken,
   });
 });
+
+// GET /api/auth/me — restore the logged-in user after refreshing the frontend.
+export const me = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) throw new ApiError(401, "Account unavailable");
+  return sendSuccess(res, 200, "Profile fetched", { user: publicUser(user) });
+});
