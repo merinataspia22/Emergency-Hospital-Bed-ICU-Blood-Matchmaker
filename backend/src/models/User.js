@@ -39,6 +39,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+        hospitalName: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+      default: "",
+    },
+    hospitalLocation: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+      default: "",
+    },
     lastDonation: {
       type: Date,
       default: null,

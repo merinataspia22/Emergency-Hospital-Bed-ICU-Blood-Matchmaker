@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 export const BLOOD_GROUPS = [
@@ -44,7 +43,6 @@ const bloodStockSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// একই hospital-এ একই blood group-এর duplicate stock ঠেকায়।
 bloodStockSchema.index(
   { hospitalName: 1, hospitalLocation: 1, bloodGroup: 1 },
   { unique: true }
