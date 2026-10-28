@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import welcomeArt from "../assets/welcome-art.png";
-import { getMyDonor, getMyHistory, getConversations, getMyRequests, getThread, respondToRequest, sendMessage, setMyAvailability, setMyAvatar, setMyLocation, updateMyDonor } from "../services/donorApi.js";
+import { addMyDonation, getMyDonor, getMyHistory, getConversations, getMyRequests, getThread, respondToRequest, sendMessage, setMyAvailability, setMyAvatar, setMyLocation, updateMyDonor } from "../services/donorApi.js";
 import "./DonorDashboard.css";
 
 /* ---------- demo data (backend e connect korar age porjonto) ---------- */
@@ -97,6 +97,19 @@ const Modal = ({ title, onClose, children }) => (
   </div>
 );
 
+function DonationForm({ onSubmit, onCancel }) {
+  const [f, setF] = useState({ date: "", hospitalName: "" });
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <div className="dd-form">
+      <label className="dd-field">Hospital<input type="text" value={f.hospitalName} placeholder="Hospital name" onChange={set("hospitalName")} /></label>
+      <label className="dd-field">Donation date<input type="date" max={today} value={f.date} onChange={set("date")} /></label>
+      <div className="dd-modal-actions"><button className="dd-btn dd-btn-outline" onClick={onCancel}>Cancel</button><button className="dd-btn dd-btn-primary" onClick={() => (f.date && f.hospitalName.trim().length > 1 ? onSubmit(f) : alert("Please enter hospital name and date"))}>Save donation</button></div>
+    </div>
+  );
+}
+
 function ApptForm({ initial, submitLabel, onSubmit, onCancel }) {
   const [f, setF] = useState(initial);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -129,11 +142,22 @@ export default function DonorDashboard() {
   const [savedProfile, setSavedProfile] = useState(emptyProfile);
   const [avatar, setAvatar] = useState("");
   const [myLoc, setMyLoc] = useState(null);
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
   const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState("All");
   const [prefs, setPrefs] = useState({ email: true, sms: true, urgent: true, visible: true });
 
   useEffect(() => { const o = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = o; }; }, []);
+  useEffect(() => {
+    const t = setInterval(() => { getMyRequests().then((r) => setRequests(r.map(toRequest))).catch(() => {}); }, 15000);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    const load = () => getConversations().then((l) => setUnreadMsgs(l.reduce((n, c) => n + c.unread, 0))).catch(() => {});
+    load();
+    const t = setInterval(load, 10000);
+    return () => clearInterval(t);
+  }, []);
   useEffect(() => { if (!notice) return; const t = setTimeout(() => setNotice(""), 3500); return () => clearTimeout(t); }, [notice]);
 
   /* ---------- backend: donor data load ---------- */
@@ -210,6 +234,10 @@ export default function DonorDashboard() {
   const send = async () => {
     const t = draft.trim(); if (!t || !chatId) return;
     try { await sendMessage(chatId, t); setDraft(""); await loadThread(chatId); } catch (e) { setNotice(e.message); }
+  };
+  const addDonation = async (f) => {
+    try { await addMyDonation({ date: f.date, hospitalName: f.hospitalName.trim() }); await loadDonor(); setModal(null); setNotice("Donation recorded."); }
+    catch (e) { setNotice(e.message); }
   };
   const saveProfile = async () => {
     const payload = { address: profile.address, dateOfBirth: profile.dob, weightKg: profile.weight };
@@ -372,7 +400,7 @@ export default function DonorDashboard() {
 
   const History = (
     <section className="dd-page">
-      <div className="dd-page-head"><div><h1>Donation History</h1><p>{history.length} donations so far. Thank you!</p></div></div>
+      <div className="dd-page-head"><div><h1>Donation History</h1><p>{history.length} donations so far. Thank you!</p></div><button className="dd-btn dd-btn-primary" onClick={() => setModal({ type: "donation" })}>Add donation</button></div>
       <div className="dd-panel dd-scroll"><table className="dd-table"><thead><tr><th>Date</th><th>Blood group</th><th>Hospital</th><th>Status</th></tr></thead><tbody>
         {history.map((h) => <tr key={h.id}><td>{fmt(h.date)}</td><td><b>{h.group}</b></td><td>{h.hospital}</td><td><em className="dd-done"><Icon name="check" size={11} /> Completed</em></td></tr>)}
       </tbody></table></div>
@@ -442,7 +470,7 @@ export default function DonorDashboard() {
         <Brand />
         <nav className="dd-side-nav" aria-label="Donor menu">
           {NAV.map(([icon, label]) => (
-            <button key={label} className={active === label ? "selected" : ""} onClick={() => go(label)}><Icon name={icon} size={18} /><span>{label}</span>{label === "Notifications" && unread > 0 && <i>{unread}</i>}</button>
+            <button key={label} className={active === label ? "selected" : ""} onClick={() => go(label)}><Icon name={icon} size={18} /><span>{label}</span>{label === "Notifications" && unread > 0 && <i>{unread}</i>}{label === "Messages" && unreadMsgs > 0 && <i>{unreadMsgs}</i>}</button>
           ))}
         </nav>
         <Link className="dd-logout" to="/"><Icon name="logout" size={19} />Logout</Link>
@@ -477,6 +505,7 @@ export default function DonorDashboard() {
           <div className="dd-modal-actions">{mr.status === "pending" ? <><button className="dd-btn dd-btn-outline" onClick={() => respond(mr, "declined")}>Decline</button><button className="dd-btn dd-btn-primary" onClick={() => respond(mr, "accepted")}>Accept request</button></> : <span className={`dd-badge ${mr.status}`}>{mr.status}</span>}</div>
         </Modal>
       )}
+      {modal?.type === "donation" && <Modal title="Add donation" onClose={() => setModal(null)}><DonationForm onSubmit={addDonation} onCancel={() => setModal(null)} /></Modal>}
       {modal?.type === "book" && <Modal title="Book appointment" onClose={() => setModal(null)}><ApptForm initial={{ hospital: "City Hospital, Chattogram", date: "", time: "10:00 AM - 11:00 AM" }} submitLabel="Book appointment" onSubmit={addAppt} onCancel={() => setModal(null)} /></Modal>}
       {modal?.type === "reschedule" && ma && <Modal title="Reschedule appointment" onClose={() => setModal(null)}><ApptForm initial={{ hospital: ma.hospital, date: ma.date, time: ma.time }} submitLabel="Save new time" onSubmit={(f) => reschedule(ma.id, f)} onCancel={() => setModal(null)} /></Modal>}
       {modal?.type === "cancel" && ma && <Modal title="Cancel appointment?" onClose={() => setModal(null)}><p className="dd-note">{ma.hospital} on {fmt(ma.date)} will be cancelled.</p><div className="dd-modal-actions"><button className="dd-btn dd-btn-outline" onClick={() => setModal(null)}>Keep it</button><button className="dd-btn dd-btn-danger" onClick={() => cancelAppt(ma.id)}>Cancel appointment</button></div></Modal>}

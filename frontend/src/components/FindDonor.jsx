@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { getDonorContact, searchDonors, sendMessage } from "../services/donorApi.js";
+import { getConversations, getDonorContact, getThread, searchDonors, sendMessage } from "../services/donorApi.js";
 import "./FindDonor.css";
 
 const EMERGENCY_NUMBER = "1664"; // emergency helpline er number ekhane bodlano jay
@@ -14,8 +14,9 @@ const PLACES = {
 };
 const CTG = ["chattogram", "pahartali", "hathazari", "halishahar", "chattogram medical", "khulshi", "panchlaish", "agrabad", "kotwali", "bakalia", "chandgaon", "anderkilla"];
 const LOCATION_PLACES = { Chattogram: CTG, Dhaka: ["dhaka"], Sylhet: ["sylhet"], Rajshahi: ["rajshahi"] };
-const PLACE_KEYS = Object.keys(PLACES).sort((a, b) => b.length - a.length);
-const DEFAULT_FILTERS = { group: "All", location: "Chattogram", area: "All areas", distance: "100", availability: "any" };
+const GENERIC = ["chattogram", "dhaka", "sylhet", "rajshahi"]; // shahar er nam sobar shesh e, jate "Hathazari, Chattogram" Hathazari hishebe chena jay
+const PLACE_KEYS = Object.keys(PLACES).filter((k) => !GENERIC.includes(k)).sort((a, b) => b.length - a.length).concat(GENERIC);
+const DEFAULT_FILTERS = { group: "All", location: "All", area: "All areas", distance: "100", availability: "any" };
 
 const findPlace = (text = "") => { const t = text.toLowerCase(); return PLACE_KEYS.find((k) => t.includes(k)) || null; };
 const hash = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -153,6 +154,7 @@ export default function FindDonor() {
   const [error, setError] = useState("");
   const [modal, setModal] = useState(null);
   const [bigMap, setBigMap] = useState(false);
+  const [inbox, setInbox] = useState([]);
   const [userPos, setUserPos] = useState(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
@@ -180,13 +182,13 @@ export default function FindDonor() {
   const rows = useMemo(() => {
     const f = appliedFilters;
     const places = LOCATION_PLACES[f.location] || [];
-    const origin = userPos || PLACES[places[0]];
+    const origin = userPos || PLACES[places[0] || "chattogram"];
     let list = donors.map((d) => {
       const exact = d.lat != null && d.lng != null;
       const coords = exact ? [d.lat, d.lng] : coordsFor(d);
       return { exact, id: d.id, name: d.name, group: d.bloodGroup, location: d.city || "Location not set", city: d.city, available: d.isAvailable, last: lastText(d.lastDonationDate), photo: d.avatar || initialsAvatar(d.name), coords, dist: coords && origin ? km(origin, coords) : null };
     });
-    list = list.filter((d) => places.includes(findPlace(d.city)));
+    if (f.location !== "All") list = list.filter((d) => { const k = findPlace(d.city); return !k || places.includes(k); }); // notun sign-up donor er city chena na gelew list e thakbe
     if (f.distance !== "100") list = list.filter((d) => d.dist !== null && d.dist <= Number(f.distance));
     if (sort === "nearest") list = [...list].sort((a, b) => (a.dist ?? 1e9) - (b.dist ?? 1e9));
     if (sort === "group") list = [...list].sort((a, b) => a.group.localeCompare(b.group));
@@ -232,26 +234,18 @@ export default function FindDonor() {
   };
 
   /* ---------- contact / message ---------- */
+  const friendly = (m) => (/permission/i.test(m) ? "Phone numbers are shared only with recipient and hospital staff accounts. Log in with a recipient account, or send a message instead." : m);
   const loggedIn = () => localStorage.getItem("bc_logged_in") === "true";
   const needLogin = () => { window.alert("Please log in to contact a donor."); window.location.href = "/login"; };
 
-  const callDonor = async (e, d) => {
-    e.preventDefault();
-    if (!loggedIn()) return needLogin();
-    try {
-      const c = await getDonorContact(d.id);
-      if (!c.phone) throw new Error("This donor has not added a phone number.");
-      window.location.href = `tel:${c.phone}`;
-    } catch (err) { window.alert(err.message); }
-  };
   const openModal = (e, d, mode) => {
     e?.preventDefault();
     if (!loggedIn()) return needLogin();
-    setModal({ donor: d, mode, contact: null, cerr: "", text: "", note: "", busy: false });
+    setModal({ donor: d, mode, contact: null, cerr: "", text: "", note: "", busy: false, thread: [] });
     if (mode === "contact") {
       getDonorContact(d.id)
         .then((c) => setModal((m) => m && { ...m, contact: c }))
-        .catch((err) => setModal((m) => m && { ...m, cerr: err.message }));
+        .catch((err) => setModal((m) => m && { ...m, cerr: friendly(err.message) }));
     }
   };
   const submitMessage = async () => {
@@ -260,9 +254,34 @@ export default function FindDonor() {
     setModal((m) => ({ ...m, busy: true, note: "" }));
     try {
       await sendMessage(modal.donor.id, text);
-      setModal((m) => ({ ...m, busy: false, text: "", note: "Message sent. The donor will see it in their dashboard." }));
+      const thread = await getThread(modal.donor.id).catch(() => modal.thread);
+      getConversations().then(setInbox).catch(() => {});
+      setModal((m) => ({ ...m, busy: false, text: "", thread, note: "Message sent. The donor will see it in their dashboard." }));
     } catch (err) { setModal((m) => ({ ...m, busy: false, note: err.message })); }
   };
+
+  /* message modal khola thakle chat thread 5 second por por refresh hoy (donor er reply dekha jay) */
+  const threadId = modal && modal.mode === "message" ? modal.donor.id : null;
+  const threadRef = useRef(null);
+  /* login kora user er inbox (je kono donor er sathe kotha holei ekhane dekhay) */
+  useEffect(() => {
+    if (localStorage.getItem("bc_logged_in") !== "true") return;
+    const load = () => getConversations().then(setInbox).catch(() => {});
+    load();
+    const t = setInterval(load, 10000);
+    return () => clearInterval(t);
+  }, []);
+  const unreadTotal = inbox.reduce((n, c) => n + c.unread, 0);
+  useEffect(() => {
+    if (!threadId) return;
+    const load = () => getThread(threadId)
+      .then((t) => setModal((cur) => (cur && cur.donor.id === threadId ? { ...cur, thread: t } : cur)))
+      .catch(() => {});
+    load();
+    const t = setInterval(load, 5000);
+    return () => clearInterval(t);
+  }, [threadId]);
+  useEffect(() => { if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight; }, [modal?.thread]);
 
   return <div className="fd-page">
     <main className="fd-layout">
@@ -287,7 +306,7 @@ export default function FindDonor() {
             <div className="fd-avatar"><img src={d.photo} alt=""/><span><Icon name="check" size={10}/></span></div>
             <div className="fd-donor-info"><div className="fd-donor-name">{d.name}<span className="fd-blood-tag">{d.group}</span></div><p><Icon name="pin" size={13}/>{d.location}</p><p><Icon name="calendar" size={13}/>Last donation: {d.last}</p></div>
             <span className={`fd-status ${d.available ? "" : "fd-status-off"}`}><i/>{d.available ? "Available Now" : "Unavailable"}</span>
-            <div className="fd-row-actions"><a href="#" onClick={(e)=>callDonor(e, d)} aria-label="Call donor"><Icon name="phone" size={18}/></a><a href="#" onClick={(e)=>openModal(e, d, "message")} aria-label="Message donor"><Icon name="message" size={18}/></a><button onClick={()=>openModal(null, d, "contact")}>Contact</button></div>
+            <div className="fd-row-actions"><a href="#" onClick={(e)=>openModal(e, d, "contact")} aria-label="Call donor"><Icon name="phone" size={18}/></a><a href="#" onClick={(e)=>openModal(e, d, "message")} aria-label="Message donor"><Icon name="message" size={18}/></a><button onClick={()=>openModal(null, d, "contact")}>Contact</button></div>
           </article>)}
           {!loading && rows.length === 0 && <div className="fd-empty">{error || "No donors found for these filters. Try another blood group or area."}</div>}
         </section>
@@ -296,6 +315,14 @@ export default function FindDonor() {
       <aside className="fd-side-column">
         <section className="fd-side-card fd-urgent-card"><div className="fd-urgent-top"><span className="fd-side-icon"><Icon name="siren" size={28}/></span><div><h3>Need Urgent Blood?</h3><p>Use filters to find available donors near your location quickly.</p></div></div><a className="fd-emergency" href={`tel:${EMERGENCY_NUMBER}`}><span className="fd-phone-circle"><Icon name="phone" size={20}/></span><div><small>In a life-threatening situation?</small><strong>Call Emergency: {EMERGENCY_NUMBER}</strong></div></a></section>
         <section className="fd-side-card fd-map-card"><div className="fd-side-title"><span className="fd-pin-icon"><Icon name="pin" size={25}/></span><h3>Donor Locations</h3><button onClick={()=>setBigMap(true)}>View Map</button></div><div className="fd-map-art fd-live"><div ref={mapEl} className="fd-leaflet" />{mapFailed && <div className="fd-map-fail">Map could not load. Check your internet connection.</div>}</div></section>
+        {loggedIn() && <section className="fd-side-card fd-inbox-card">
+          <div className="fd-side-title"><span className="fd-pin-icon"><Icon name="message" size={25}/></span><h3>My Messages</h3>{unreadTotal > 0 && <span className="fd-unread">{unreadTotal}</span>}</div>
+          {inbox.length === 0 ? <p className="fd-thread-empty">No conversations yet. Click the message icon on a donor to start.</p> : inbox.slice(0, 5).map((c) => (
+            <button key={c.userId} className="fd-inbox-row" onClick={() => openModal(null, { id: c.userId, name: c.name }, "message")}>
+              <b>{c.name}</b><span>{c.lastFromMe ? "You: " : ""}{c.lastMessage}</span>{c.unread > 0 && <i>{c.unread}</i>}
+            </button>
+          ))}
+        </section>}
       </aside>
     </main>
 
@@ -308,6 +335,9 @@ export default function FindDonor() {
           {modal.cerr ? <p className="fd-modal-err">{modal.cerr}</p>
             : modal.contact ? <><p><b>Phone:</b> {modal.contact.phone || "Not provided"}</p><p><b>City:</b> {modal.contact.city || "-"}</p>{modal.contact.phone && <a className="fd-modal-call" href={`tel:${modal.contact.phone}`}>Call now</a>}</>
             : <p>Loading contact...</p>}
+        </div>}
+        {modal.mode === "message" && <div className="fd-thread" ref={threadRef}>
+          {modal.thread.length === 0 ? <p className="fd-thread-empty">No messages yet. Say hello!</p> : modal.thread.map((m) => <div key={m.id} className={`fd-bubble ${m.mine ? "me" : "them"}`}>{m.text}</div>)}
         </div>}
         <textarea value={modal.text} maxLength={1000} placeholder="Write a message to this donor" onChange={(e) => setModal((m) => ({ ...m, text: e.target.value }))} />
         {modal.note && <p className="fd-modal-note">{modal.note}</p>}
