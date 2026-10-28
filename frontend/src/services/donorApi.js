@@ -2,7 +2,8 @@
 // Donor server alada (port 5001), tai nijer base URL. Token member 1 er readToken theke.
 import { readToken } from "./api.js";
 
-const BASE = import.meta.env.VITE_DONOR_API_URL || "http://localhost:5001/api";
+// Donor server (port 5001) ekhon jei host e website cholche sei host e khuje. Alada .env lagbe na.
+const BASE = import.meta.env.VITE_DONOR_API_URL || `http://${window.location.hostname}:5001/api`;
 
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -11,11 +12,16 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
     if (!token) throw new Error("Please log in first");
     headers.Authorization = `Bearer ${token}`;
   }
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new Error("Cannot reach the donor server (port 5001). Start it: cd backend/member2-donor, npm run dev");
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.success === false) {
     throw new Error(json.message || "Something went wrong.");
