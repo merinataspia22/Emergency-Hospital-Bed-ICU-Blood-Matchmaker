@@ -1,5 +1,11 @@
 
-export default function LoginSocial({ onSocial }) {
+import { GoogleLogin } from '@react-oauth/google';
+
+export default function LoginSocial({
+  onSocial,
+  onGoogle,
+  onGoogleError
+}) {
   return (
     <>
       <div className="bc-social-divider">
@@ -7,15 +13,34 @@ export default function LoginSocial({ onSocial }) {
       </div>
 
       <div className="bc-social-row">
-        <button
-          type="button"
-          onClick={() => onSocial("Google")}
-          className="bc-social-btn"
-        >
-          <span className="bc-google-g" aria-hidden="true">G</span>
-          Continue with Google
-        </button>
 
+        {/* Google Login */}
+        <div
+          style={{
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          <GoogleLogin
+            onSuccess={(response) => {
+              if (response.credential) {
+                onGoogle?.(response.credential);
+              } else {
+                onGoogleError?.();
+              }
+            }}
+            onError={() => onGoogleError?.()}
+            type="standard"
+            text="continue_with"
+            theme="outline"
+            size="large"
+            shape="rectangular"
+          />
+        </div>
+
+        {/* Facebook - unchanged */}
         <button
           type="button"
           onClick={() => onSocial("Facebook")}
@@ -39,6 +64,7 @@ export default function LoginSocial({ onSocial }) {
           </span>
           Continue with Facebook
         </button>
+
       </div>
     </>
   );
