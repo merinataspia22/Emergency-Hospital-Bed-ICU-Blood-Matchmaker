@@ -1,7 +1,8 @@
 
 import BloodStock, {
-  MEMBER5_BLOOD_GROUPS as BLOOD_GROUPS,
-} from "../models/BloodStock.model.js";
+  BLOOD_GROUPS as MEMBER5_BLOOD_GROUPS,
+} from "../../../src/models/BloodStock.js";
+
 import StaffProfile from "../models/StaffProfile.model.js";
 import BloodRequest from "../../../src/models/BloodRequest.js";
 
@@ -18,8 +19,8 @@ const ok = (res, message, data) =>
     data,
   });
 
-// Load the hospital assigned to the logged-in staff from the database.
-// The hospital is NEVER taken from the client (query/body), only from StaffProfile.
+// Get the hospital assigned to the logged-in staff.
+// Hospital identity is taken from the database, not from the client.
 async function getAssignedHospital(req, res) {
   const profile = await StaffProfile.findOne({
     userId: req.user.id,
@@ -46,18 +47,12 @@ export async function getMyHospitalStock(req, res, next) {
     const hospital = await getAssignedHospital(req, res);
     if (!hospital) return;
 
-    const { hospitalName, hospitalLocation } = hospital;
-
-    const stock = await BloodStock.find({
-      hospitalName,
-      hospitalLocation,
-    })
+    const stock = await BloodStock.find(hospital)
       .sort({ bloodGroup: 1 })
       .lean();
 
     return ok(res, "Hospital blood stock fetched", {
-      hospitalName,
-      hospitalLocation,
+      ...hospital,
       stock,
     });
   } catch (error) {
@@ -71,11 +66,13 @@ export async function updateMyHospitalStock(req, res, next) {
     const hospital = await getAssignedHospital(req, res);
     if (!hospital) return;
 
-    const { hospitalName, hospitalLocation } = hospital;
-    const bloodGroup = String(req.params.group || "").toUpperCase();
+    const bloodGroup = String(
+      req.params.group || ""
+    ).toUpperCase();
+
     const { unitsAvailable } = req.body || {};
 
-    if (!BLOOD_GROUPS.includes(bloodGroup)) {
+    if (!MEMBER5_BLOOD_GROUPS.includes(bloodGroup)) {
       return fail(res, 400, "Invalid blood group");
     }
 
@@ -92,8 +89,7 @@ export async function updateMyHospitalStock(req, res, next) {
 
     const stock = await BloodStock.findOneAndUpdate(
       {
-        hospitalName,
-        hospitalLocation,
+        ...hospital,
         bloodGroup,
       },
       {
@@ -124,12 +120,7 @@ export async function getMyHospitalRequests(req, res, next) {
     const hospital = await getAssignedHospital(req, res);
     if (!hospital) return;
 
-    const { hospitalName, hospitalLocation } = hospital;
-
-    const filter = {
-      hospitalName,
-      hospitalLocation,
-    };
+    const filter = { ...hospital };
 
     if (req.query.status) {
       const allowedStatuses = [
@@ -152,8 +143,7 @@ export async function getMyHospitalRequests(req, res, next) {
       .lean();
 
     return ok(res, "Hospital blood requests fetched", {
-      hospitalName,
-      hospitalLocation,
+      ...hospital,
       count: requests.length,
       requests,
     });
@@ -168,16 +158,9 @@ export async function getMyHospitalSummary(req, res, next) {
     const hospital = await getAssignedHospital(req, res);
     if (!hospital) return;
 
-    const { hospitalName, hospitalLocation } = hospital;
-
-    const hospitalFilter = {
-      hospitalName,
-      hospitalLocation,
-    };
-
     const [stockRows, requestRows] = await Promise.all([
       BloodStock.aggregate([
-        { $match: hospitalFilter },
+        { $match: hospital },
         {
           $group: {
             _id: null,
@@ -187,7 +170,7 @@ export async function getMyHospitalSummary(req, res, next) {
         },
       ]),
       BloodRequest.aggregate([
-        { $match: hospitalFilter },
+        { $match: hospital },
         {
           $group: {
             _id: "$status",
@@ -202,8 +185,7 @@ export async function getMyHospitalSummary(req, res, next) {
     );
 
     return ok(res, "Hospital dashboard summary fetched", {
-      hospitalName,
-      hospitalLocation,
+      ...hospital,
       inventory: stockRows[0] || {
         totalUnits: 0,
         bloodGroups: 0,
@@ -233,11 +215,11 @@ export async function listStaff(_req, res, next) {
       .lean();
 
     const staff = profiles
-      .filter((p) => p.userId)
-      .map((p) => ({
-        ...p.userId,
-        hospitalName: p.hospitalName,
-        hospitalLocation: p.hospitalLocation,
+      .filter((profile) => profile.userId)
+      .map((profile) => ({
+        ...profile.userId,
+        hospitalName: profile.hospitalName,
+        hospitalLocation: profile.hospitalLocation,
       }));
 
     return ok(res, "Staff list fetched", { staff });
