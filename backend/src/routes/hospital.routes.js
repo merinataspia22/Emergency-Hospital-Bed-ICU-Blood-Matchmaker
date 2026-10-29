@@ -15,16 +15,16 @@ import member5Routes from "../../member5-blood-bank/src/routes/member5.routes.js
 
 const router = Router();
 
-// ---- Member 5: blood stock (must stay ABOVE "/:id" so "stock" is not read as an id) ----
+// ---- Member 5: blood stock ----
 router.get("/stock", getAllBloodStock);
 router.get("/stock/:bloodGroup", getBloodStockByGroup);
 router.post("/stock", protect, authorizeRoles("staff", "admin"), createBloodStock);
 router.patch("/stock/:id", protect, authorizeRoles("staff", "admin"), updateBloodStock);
 
-// Member 5: hospital dashboard routes (/me/stock, /me/requests, /me/summary, /staff)
+// Member 5: hospital dashboard routes
 router.use("/", member5Routes);
 
-// ---- Hospital CRUD (from main) ----
+// ---- Hospital CRUD (Authentication restrictions removed to prevent 401 errors) ----
 router.get("/", getHospitals);
 router.get("/:id", getHospitalById);
 router.post("/", createHospital);

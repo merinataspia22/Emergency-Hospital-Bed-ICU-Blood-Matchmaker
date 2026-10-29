@@ -1,12 +1,12 @@
 import User from "../models/User.js";
 import Hospital from "../models/Hospital.js";
 import BloodRequest from "../models/BloodRequest.js";
+import bcrypt from "bcryptjs";
 
 export const getAdminOverview = async (req, res) => {
   try {
     const totalUsersCount = await User.countDocuments({});
     
-    // Atlas document match: role: "donor" or type: "donor" (case-insensitive)
     const donorCount = await User.countDocuments({
       $or: [
         { role: { $regex: /^donor$/i } },
@@ -51,15 +51,19 @@ export const getUsers = async (req, res) => {
   }
 };
 
-// Added: Create user from Admin Panel
+// Fixed: Create user with proper bcrypt password hashing
 export const createUser = async (req, res) => {
   try {
     const { name, email, password, type, location } = req.body;
 
+    const rawPassword = password || "defaultpassword123";
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(rawPassword, salt);
+
     const newUser = new User({
       name,
       email: email || undefined,
-      passwordHash: password || "defaultpassword123", // Matches User schema field
+      passwordHash: hashedPassword, // Properly hashed password
       type: type || "Donor",
       role: (type || "Donor").toLowerCase(),
       location: location || "",
@@ -74,7 +78,7 @@ export const createUser = async (req, res) => {
   }
 };
 
-// Added: Update user from Admin Panel
+// Update user from Admin Panel
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;

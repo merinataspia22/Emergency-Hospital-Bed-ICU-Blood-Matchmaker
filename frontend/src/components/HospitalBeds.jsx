@@ -1,5 +1,4 @@
 import { useMemo, useState, useEffect } from "react";
-import Navbar from "./Navbar";
 import {
   Building2,
   MapPin,
@@ -160,10 +159,11 @@ export default function HospitalBeds() {
     fetch(`${API_BASE}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
-           if (!Array.isArray(data)) return;
-        setHospitals(data);
-        if (data.length > 0) {
-          setSelectedId(data[0]._id || data[0].id);
+        const hospitalArray = Array.isArray(data) ? data : (data.data || data.hospitals || []);
+        if (!Array.isArray(hospitalArray)) return;
+        setHospitals(hospitalArray);
+        if (hospitalArray.length > 0) {
+          setSelectedId(hospitalArray[0]._id || hospitalArray[0].id);
         }
       })
       .catch((err) => console.error("Error fetching hospitals from backend:", err));
@@ -199,8 +199,6 @@ export default function HospitalBeds() {
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] font-sans text-[#15151f]">
-      <Navbar active="Hospital Beds" />
-
       <div className="grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-4">
         <main className="min-w-0 pb-4">
           <section className="flex min-h-[170px] items-center justify-between overflow-hidden bg-gradient-to-r from-white from-35% to-[#fde4e3] pl-6 md:pl-9">
@@ -391,7 +389,7 @@ export default function HospitalBeds() {
                       <strong className="block text-[13px]">{h.name}</strong>
                       <small className="flex items-center gap-1 text-[11px] text-gray-500">
                         <MapPin size={12} className="text-[#d90f1f]" />
-                        {h.area}, Chattogram
+                        {h.area || h.address || "Chattogram"}
                       </small>
                     </div>
                   </div>
@@ -417,7 +415,7 @@ export default function HospitalBeds() {
                   </div>
 
                   <div>
-                    <BloodBadge status={h.blood} />
+                    <BloodBadge status={h.blood || "Available"} />
                   </div>
 
                   <div className="flex items-center gap-2.5">
@@ -518,7 +516,7 @@ export default function HospitalBeds() {
               <div className="flex justify-between text-xs text-gray-500">
                 <span className="flex items-center gap-1">
                   <MapPin size={13} className="text-[#d90f1f]" />
-                  {selected.area}, Chattogram
+                  {selected.area || "Chattogram"}
                 </span>
                 <span>{selected.dist || 0} km away</span>
               </div>
@@ -552,12 +550,12 @@ export default function HospitalBeds() {
                   <div>
                     <b
                       className={`block text-sm ${
-                        selected.blood === "Available"
+                        (selected.blood || "Available") === "Available"
                           ? "text-[#16a34a]"
                           : "text-[#d97706]"
                       }`}
                     >
-                      {selected.blood}
+                      {selected.blood || "Available"}
                     </b>
                     <small className="text-[10px] text-gray-500">
                       Blood Support
@@ -585,7 +583,7 @@ export default function HospitalBeds() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <MapPin size={15} />
-                  {selected.address || selected.area + ", Chattogram"}
+                  {selected.address || (selected.area ? selected.area + ", Chattogram" : "Chattogram")}
                 </li>
               </ul>
 

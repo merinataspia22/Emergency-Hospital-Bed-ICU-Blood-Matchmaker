@@ -35,6 +35,15 @@ const navItems = [
 const initials = (n = "") =>
   n.replace("Dr. ", "").split(" ").map((w) => w[0]).slice(0, 2).join("");
 
+// Fixed: accessToken দিয়ে টোকেন রিড করার ব্যবস্থা করা হলো
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || localStorage.getItem("token") || "";
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+};
+
 function Card({ title, icon, action, children }) {
   return (
     <div className="min-w-0 rounded-2xl bg-white p-4 shadow-sm">
@@ -129,7 +138,7 @@ export default function AdminDashboard() {
   const [editingUserId, setEditingUserId] = useState(null);
   const [userForm, setUserForm] = useState({ name: "", type: "Donor", location: "", email: "", password: "" });
 
-  // Blood Request Modal States (Schema exact field mapping)
+  // Blood Request Modal States
   const todayStr = new Date().toISOString().split("T")[0];
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [editingRequestId, setEditingRequestId] = useState(null);
@@ -148,12 +157,13 @@ export default function AdminDashboard() {
   });
 
   const fetchHospitals = () => {
-    fetch(`${API_BASE}/api/hospitals`)
+    fetch(`${API_BASE}/api/hospitals`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          const mappedPartners = data.map((h) => ({
-            id: h._id,
+        const hospitalArray = Array.isArray(data) ? data : (data.data || data.hospitals || []);
+        if (Array.isArray(hospitalArray)) {
+          const mappedPartners = hospitalArray.map((h) => ({
+            id: h._id || h.id,
             name: h.name,
             loc: h.area || h.address || "Chattogram",
             general: h.general || 10,
@@ -164,7 +174,7 @@ export default function AdminDashboard() {
           setPartners(mappedPartners);
           setStats((prev) =>
             prev.map((s) =>
-              s.label === "Hospital Partners" ? { ...s, value: String(data.length) } : s
+              s.label === "Hospital Partners" ? { ...s, value: String(hospitalArray.length) } : s
             )
           );
         }
@@ -173,7 +183,7 @@ export default function AdminDashboard() {
   };
 
   const fetchUsers = () => {
-    fetch(`${API_BASE}/api/admin/users`)
+    fetch(`${API_BASE}/api/admin/users`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         const userArray = Array.isArray(data) ? data : (data.users || data.data || []);
@@ -204,7 +214,7 @@ export default function AdminDashboard() {
   };
 
   const fetchRequests = () => {
-    fetch(`${API_BASE}/api/bloodrequests`)
+    fetch(`${API_BASE}/api/bloodrequests`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         const reqArray = Array.isArray(data) ? data : (data.requests || data.data || []);
@@ -249,7 +259,7 @@ export default function AdminDashboard() {
     fetchUsers();
     fetchRequests();
     
-    fetch(`${API_BASE}/api/admin/overview`)
+    fetch(`${API_BASE}/api/admin/overview`, { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         const overview = data?.data || data;
@@ -274,9 +284,12 @@ export default function AdminDashboard() {
   }, []);
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to remove this user from MongoDB Atlas?")) return;
+    if (!window.confirm("Are you sure you want to remove this user?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         setUsers(users.filter(u => u.id !== userId));
         alert("User removed successfully!");
@@ -296,7 +309,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(userForm),
       });
       if (res.ok) {
@@ -316,7 +329,10 @@ export default function AdminDashboard() {
   const handleDeleteHospital = async (hospitalId) => {
     if (!window.confirm("Are you sure you want to remove this hospital?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/hospitals/${hospitalId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/hospitals/${hospitalId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         setPartners(partners.filter(p => p.id !== hospitalId));
         alert("Hospital removed successfully!");
@@ -336,7 +352,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(hospitalForm),
       });
       if (res.ok) {
@@ -356,18 +372,16 @@ export default function AdminDashboard() {
   const handleDeleteRequest = async (requestId) => {
     if (!window.confirm("Are you sure you want to delete this blood request?")) return;
     try {
-      const res = await fetch(`${API_BASE}/api/bloodrequests/${requestId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/bloodrequests/${requestId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         fetchRequests();
         alert("Blood request deleted successfully!");
       } else {
         const updated = requests.filter(r => r.id !== requestId);
         setRequests(updated);
-        setStats((prev) =>
-          prev.map((s) =>
-            s.label === "Blood Requests" ? { ...s, value: String(updated.length) } : s
-          )
-        );
         alert("Blood request removed successfully!");
       }
     } catch (err) {
@@ -378,7 +392,7 @@ export default function AdminDashboard() {
 
   const handleSaveRequest = async (e) => {
     e.preventDefault();
-    const method = editingRequestId ? "PUT" : "POST";
+    const method = editingRequestId ? "PATCH" : "POST";
     const url = editingRequestId ? `${API_BASE}/api/bloodrequests/${editingRequestId}` : `${API_BASE}/api/bloodrequests`;
 
     const defaultUser = users.length > 0 ? users[0].id : "650000000000000000000000";
@@ -400,12 +414,12 @@ export default function AdminDashboard() {
     try {
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders(),
         body: JSON.stringify(payload),
       });
       
       if (res.ok) {
-        alert(editingRequestId ? "Blood request updated in MongoDB Atlas!" : "Blood request saved to MongoDB Atlas!");
+        alert(editingRequestId ? "Blood request updated successfully!" : "Blood request saved successfully!");
         setShowRequestModal(false);
         setEditingRequestId(null);
         setRequestForm({
@@ -424,11 +438,10 @@ export default function AdminDashboard() {
         fetchRequests();
       } else {
         const errRes = await res.json().catch(() => ({}));
-        alert(`Atlas Error: ${errRes.message || "Failed to save in MongoDB Atlas"}`);
+        alert(`Error: ${errRes.message || "Failed to save blood request"}`);
       }
     } catch (err) {
-      console.error("Error saving request to Atlas:", err);
-      alert("Backend connection error. Ensure your Node.js server is running.");
+      console.error("Error saving request:", err);
     }
   };
 
@@ -577,7 +590,7 @@ export default function AdminDashboard() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="6" className="p-4 text-center text-xs text-gray-500">Loading users from Atlas...</td>
+                          <td colSpan="6" className="p-4 text-center text-xs text-gray-500">Loading users...</td>
                         </tr>
                       )}
                     </tbody>
@@ -588,7 +601,7 @@ export default function AdminDashboard() {
 
             {active === "Blood Requests" && (
               <Card
-                title="Blood Requests (MongoDB Atlas)"
+                title="Blood Requests"
                 icon="🩸"
                 action={
                   <button
@@ -676,7 +689,7 @@ export default function AdminDashboard() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="7" className="p-4 text-center text-xs text-gray-500">No blood requests found in MongoDB Atlas.</td>
+                          <td colSpan="7" className="p-4 text-center text-xs text-gray-500">No blood requests found.</td>
                         </tr>
                       )}
                     </tbody>
@@ -687,7 +700,7 @@ export default function AdminDashboard() {
 
             {active === "Hospital Partners" && (
               <Card
-                title="Hospital Partners & Inventory (MongoDB Atlas)"
+                title="Hospital Partners & Inventory"
                 icon="🏢"
                 action={
                   <button
@@ -757,7 +770,7 @@ export default function AdminDashboard() {
 
             {active === "Reports" && (
               <div className="flex flex-col gap-3">
-                <Card title="Platform Analytics & Reports (MongoDB Atlas)" icon="📊">
+                <Card title="Platform Analytics & Reports" icon="📊">
                   <div className="grid gap-3 xl:grid-cols-2 p-2">
                     <div>
                       <h4 className="text-xs font-bold mb-2">Blood Requests Trend Overview</h4>
