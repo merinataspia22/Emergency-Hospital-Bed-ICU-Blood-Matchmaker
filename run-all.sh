@@ -11,7 +11,7 @@ if [ ! -f backend/.env ]; then
   exit 1
 fi
 
-for d in backend backend/member2-donor frontend; do
+for d in backend frontend; do
   if [ ! -d "$d/node_modules" ]; then
     echo "Installing $d packages..."
     (cd "$d" && npm install)
@@ -19,9 +19,8 @@ for d in backend backend/member2-donor frontend; do
 done
 
 (cd backend && npm run dev) &
-(cd backend/member2-donor && npm run dev) &
 (cd frontend && npm run dev -- --host) &
 
 echo ""
-echo "3 ta server chalu hocche (5000, 5001, 5173). Bondho korte Ctrl+C."
+echo "2 ta server chalu hocche (5000, 5173). Bondho korte Ctrl+C."
 wait

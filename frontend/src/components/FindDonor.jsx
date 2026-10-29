@@ -4,6 +4,11 @@ import "./FindDonor.css";
 
 const EMERGENCY_NUMBER = "1664"; // emergency helpline er number ekhane bodlano jay
 
+/* ---------- map tile provider (OSM Codespaces e 403 dey, CARTO te ekhon API key lage, tai Esri use kora hoyeche - key lage na) ---------- */
+const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
+const TILE_ATTRIBUTION = "Tiles © Esri — Source: Esri, HERE, Garmin, OpenStreetMap contributors";
+const tileOptions = (maxZoom) => ({ attribution: TILE_ATTRIBUTION, maxZoom });
+
 /* ---------- place -> lat/lng (donor er city text theke approximate pin) ---------- */
 const PLACES = {
   chattogram: [22.3569, 91.7832], pahartali: [22.383, 91.799], hathazari: [22.4967, 91.8085],
@@ -98,7 +103,7 @@ function BigMap({ rows, userPos, onLocate, onClose }) {
     loadLeaflet().then((L) => {
       if (cancelled || !el.current) return;
       map = L.map(el.current).setView(PLACES.chattogram, 12);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 }).addTo(map);
+      L.tileLayer(TILE_URL, tileOptions(19)).addTo(map);
       const pts = [];
       rows.forEach((d) => {
         if (!d.coords) return;
@@ -201,7 +206,7 @@ export default function FindDonor() {
     loadLeaflet().then((L) => {
       if (cancelled || !mapEl.current || mapRef.current) return;
       const map = L.map(mapEl.current, { scrollWheelZoom: false }).setView(PLACES.chattogram, 11);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 18 }).addTo(map);
+      L.tileLayer(TILE_URL, tileOptions(18)).addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
       setTimeout(() => map.invalidateSize(), 100);
