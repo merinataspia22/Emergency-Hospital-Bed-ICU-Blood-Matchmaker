@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_BASE = "";
+
 const trend = {
   labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
   values: [22, 30, 35, 46, 44, 70],
@@ -146,7 +148,7 @@ export default function AdminDashboard() {
   });
 
   const fetchHospitals = () => {
-    fetch("http://localhost:5000/api/hospitals")
+    fetch(`${API_BASE}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {
@@ -171,12 +173,14 @@ export default function AdminDashboard() {
   };
 
   const fetchUsers = () => {
-    fetch("http://localhost:5000/api/admin/users")
+    fetch(`${API_BASE}/api/admin/users`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          const mappedUsers = data.map((u) => ({
-            id: u._id,
+        const userArray = Array.isArray(data) ? data : (data.users || data.data || []);
+        
+        if (userArray.length > 0) {
+          const mappedUsers = userArray.map((u) => ({
+            id: u._id || u.id,
             name: u.name || "User",
             type: u.type || u.role || "Donor",
             loc: u.loc || u.location || "Chattogram",
@@ -184,24 +188,25 @@ export default function AdminDashboard() {
             joined: u.joined || (u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "Recently"),
           }));
           setUsers(mappedUsers);
-          const donorCount = data.filter(u => (u.type === 'Donor' || u.role === 'donor')).length;
+          const donorCount = userArray.filter(u => (u.type === 'Donor' || u.role === 'donor' || u.type === 'donor')).length;
           setStats((prev) =>
             prev.map((s) => {
-              if (s.label === "Total Users") return { ...s, value: String(data.length) };
-              if (s.label === "Registered Donors") return { ...s, value: String(donorCount || data.length) };
+              if (s.label === "Total Users") return { ...s, value: String(userArray.length) };
+              if (s.label === "Registered Donors") return { ...s, value: String(donorCount || userArray.length) };
               return s;
             })
           );
+        } else {
+          setUsers([]);
         }
       })
-      .catch((err) => console.error("Error fetching users:", err));
+      .catch((err) => console.error("Error fetching users from Atlas:", err));
   };
 
   const fetchRequests = () => {
-    fetch("http://localhost:5000/api/bloodrequests")
+    fetch(`${API_BASE}/api/bloodrequests`)
       .then((res) => res.json())
       .then((data) => {
-        // Handle both direct array or nested response objects from backend
         const reqArray = Array.isArray(data) ? data : (data.requests || data.data || []);
         
         if (reqArray.length > 0) {
@@ -239,19 +244,27 @@ export default function AdminDashboard() {
       });
   };
 
-
-  
   useEffect(() => {
     fetchHospitals();
     fetchUsers();
     fetchRequests();
-    fetch("http://localhost:5000/api/admin/overview")
+    
+    fetch(`${API_BASE}/api/admin/overview`)
       .then((res) => res.json())
       .then((data) => {
-        if (data) {
+        const overview = data?.data || data;
+        if (overview) {
           setStats((prev) =>
             prev.map((s) => {
-              if (s.label === "Completed Donations" && data.completedDonations !== undefined) return { ...s, value: String(data.completedDonations) };
+              if (s.label === "Total Users" && overview.totalUsers !== undefined) {
+                return { ...s, value: String(overview.totalUsers) };
+              }
+              if (s.label === "Registered Donors" && overview.registeredDonors !== undefined) {
+                return { ...s, value: String(overview.registeredDonors) };
+              }
+              if (s.label === "Completed Donations" && overview.completedDonations !== undefined) {
+                return { ...s, value: String(overview.completedDonations) };
+              }
               return s;
             })
           );
@@ -260,11 +273,10 @@ export default function AdminDashboard() {
       .catch((err) => console.error("Error fetching overview stats:", err));
   }, []);
 
-  // Delete User
   const handleDeleteUser = async (userId) => {
     if (!window.confirm("Are you sure you want to remove this user from MongoDB Atlas?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, { method: "DELETE" });
       if (res.ok) {
         setUsers(users.filter(u => u.id !== userId));
         alert("User removed successfully!");
@@ -276,11 +288,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Save User
   const handleSaveUser = async (e) => {
     e.preventDefault();
     const method = editingUserId ? "PUT" : "POST";
-    const url = editingUserId ? `http://localhost:5000/api/admin/users/${editingUserId}` : "http://localhost:5000/api/admin/users";
+    const url = editingUserId ? `${API_BASE}/api/admin/users/${editingUserId}` : `${API_BASE}/api/admin/users`;
 
     try {
       const res = await fetch(url, {
@@ -302,11 +313,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete Hospital
   const handleDeleteHospital = async (hospitalId) => {
     if (!window.confirm("Are you sure you want to remove this hospital?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/hospitals/${hospitalId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/hospitals/${hospitalId}`, { method: "DELETE" });
       if (res.ok) {
         setPartners(partners.filter(p => p.id !== hospitalId));
         alert("Hospital removed successfully!");
@@ -318,11 +328,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Save Hospital
   const handleSaveHospital = async (e) => {
     e.preventDefault();
     const method = editingHospitalId ? "PUT" : "POST";
-    const url = editingHospitalId ? `http://localhost:5000/api/hospitals/${editingHospitalId}` : "http://localhost:5000/api/hospitals";
+    const url = editingHospitalId ? `${API_BASE}/api/hospitals/${editingHospitalId}` : `${API_BASE}/api/hospitals`;
 
     try {
       const res = await fetch(url, {
@@ -344,11 +353,10 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete Blood Request
   const handleDeleteRequest = async (requestId) => {
     if (!window.confirm("Are you sure you want to delete this blood request?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/bloodrequests/${requestId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/bloodrequests/${requestId}`, { method: "DELETE" });
       if (res.ok) {
         fetchRequests();
         alert("Blood request deleted successfully!");
@@ -368,13 +376,11 @@ export default function AdminDashboard() {
     }
   };
 
-  // Save Blood Request matching BloodRequest.js Mongoose Schema
   const handleSaveRequest = async (e) => {
     e.preventDefault();
     const method = editingRequestId ? "PUT" : "POST";
-    const url = editingRequestId ? `http://localhost:5000/api/bloodrequests/${editingRequestId}` : "http://localhost:5000/api/bloodrequests";
+    const url = editingRequestId ? `${API_BASE}/api/bloodrequests/${editingRequestId}` : `${API_BASE}/api/bloodrequests`;
 
-    // Auto assign requestedBy if empty (uses first fetched user ID or fallback valid Mongo ID)
     const defaultUser = users.length > 0 ? users[0].id : "650000000000000000000000";
 
     const payload = {
@@ -415,7 +421,7 @@ export default function AdminDashboard() {
           details: "",
           status: "Pending"
         });
-        fetchRequests(); // Re-fetch directly from MongoDB Atlas
+        fetchRequests();
       } else {
         const errRes = await res.json().catch(() => ({}));
         alert(`Atlas Error: ${errRes.message || "Failed to save in MongoDB Atlas"}`);
@@ -439,7 +445,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#e8ebf4] p-3 font-sans text-[#15151f] md:p-6">
       <div className="mx-auto max-w-[1400px] overflow-hidden rounded-2xl bg-white shadow-sm">
-        {/* Top bar */}
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#eceef3] px-6 py-3.5">
           <div className="flex items-center gap-2 text-2xl font-bold">
             <span className="text-3xl">🩸</span>
@@ -475,7 +480,6 @@ export default function AdminDashboard() {
         </header>
 
         <div className="grid bg-[#f6f7fb] md:grid-cols-[200px_minmax(0,1fr)]">
-          {/* Sidebar */}
           <aside className="flex flex-col gap-5 border-r border-[#eceef3] bg-white p-2.5 py-3.5">
             <nav className="flex flex-row flex-wrap gap-1 md:flex-col">
               {navItems.map((n) => (
@@ -508,9 +512,7 @@ export default function AdminDashboard() {
             </div>
           </aside>
 
-          {/* Main Content Area */}
           <main className="flex min-w-0 flex-col gap-3 p-3">
-            {/* 1. MANAGE USERS VIEW */}
             {active === "Manage Users" && (
               <Card
                 title="Registered Users (MongoDB Atlas)"
@@ -584,7 +586,6 @@ export default function AdminDashboard() {
               </Card>
             )}
 
-            {/* 2. BLOOD REQUESTS VIEW WITH ADD, EDIT, DELETE */}
             {active === "Blood Requests" && (
               <Card
                 title="Blood Requests (MongoDB Atlas)"
@@ -684,7 +685,6 @@ export default function AdminDashboard() {
               </Card>
             )}
 
-            {/* 3. HOSPITAL PARTNERS VIEW */}
             {active === "Hospital Partners" && (
               <Card
                 title="Hospital Partners & Inventory (MongoDB Atlas)"
@@ -755,7 +755,6 @@ export default function AdminDashboard() {
               </Card>
             )}
 
-            {/* 4. REPORTS VIEW WITH DIAGRAMS & CHARTS */}
             {active === "Reports" && (
               <div className="flex flex-col gap-3">
                 <Card title="Platform Analytics & Reports (MongoDB Atlas)" icon="📊">
@@ -784,10 +783,8 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* 5. DEFAULT DASHBOARD OVERVIEW VIEW */}
             {active === "Dashboard" && (
               <>
-                {/* Welcome */}
                 <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-[#fde8e7] to-white px-6 py-5">
                   <div>
                     <h1 className="text-3xl font-extrabold">Welcome Back, Admin!</h1>
@@ -806,7 +803,6 @@ export default function AdminDashboard() {
                   </div>
                 </section>
 
-                {/* Stat cards */}
                 <section className="grid grid-cols-2 gap-3 xl:grid-cols-5">
                   {stats.map((s) => (
                     <div key={s.label} className="relative flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm">
@@ -825,7 +821,6 @@ export default function AdminDashboard() {
                   ))}
                 </section>
 
-                {/* Charts row */}
                 <section className="grid gap-3 xl:grid-cols-[1.35fr_1fr_1.2fr]">
                   <Card
                     title="Blood Requests Trend"
@@ -884,7 +879,6 @@ export default function AdminDashboard() {
                   </Card>
                 </section>
 
-                {/* Tables row */}
                 <section className="grid gap-3 xl:grid-cols-[1.2fr_1.1fr_1.1fr]">
                   <Card title="Recent Registered Users" icon="👥" action={<ViewAll />}>
                     <table className="w-full border-collapse text-xs">
@@ -955,7 +949,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* User Modal */}
       {showUserModal && (
         <div className="fixed inset-0 grid place-items-center bg-black/50 p-4 z-50">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
@@ -997,7 +990,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Hospital Modal */}
       {showHospitalModal && (
         <div className="fixed inset-0 grid place-items-center bg-black/50 p-4 z-50">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
@@ -1034,7 +1026,6 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Blood Request Modal - Strictly aligned with BloodRequest.js schema */}
       {showRequestModal && (
         <div className="fixed inset-0 grid place-items-center bg-black/50 p-4 z-50">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto">

@@ -19,7 +19,9 @@ import { ROLE_ROUTES } from '../../auth/demoAuth.js';
 export default function LoginForm({ onNotice, onForgot }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+
+  // Existing Login + New Google Login
+  const { login, googleLogin } = useAuth();
 
   const [values, setValues] = useState({
     email: location.state?.email || readEmail(),
@@ -55,6 +57,7 @@ export default function LoginForm({ onNotice, onForgot }) {
     }));
   };
 
+  // Existing Email/Password Login - Unchanged
   const submit = async event => {
     event.preventDefault();
 
@@ -135,6 +138,72 @@ export default function LoginForm({ onNotice, onForgot }) {
     }
   };
 
+  // NEW: Google Login Handler - Member 1
+  const handleGoogle = async credential => {
+    if (submitting) return;
+
+    setSubmitting(true);
+
+    try {
+      // Verify Google token through Main Backend
+      const result = await googleLogin(credential);
+
+      // First-time Google user
+      if (result.needsProfile) {
+        onNotice?.({
+          type: 'info',
+          title: 'Complete your Google signup',
+          description:
+            'Google account verified. Please complete your registration details to continue.'
+        });
+
+        // Google profile completion will be added next.
+        return;
+      }
+
+      // Existing Google user
+      const account = result.user;
+
+      // Redirect based on saved account role
+      const dashboard = ROLE_ROUTES[account.role];
+
+      if (!dashboard) {
+        throw new Error(
+          'This account has no dashboard assigned.'
+        );
+      }
+
+      navigate(dashboard, {
+        replace: true
+      });
+
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in with Google.';
+
+      onNotice?.({
+        type: 'error',
+        title: 'Google sign-in unsuccessful',
+        description: message
+      });
+
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // NEW: Google Popup Error Handler
+  const handleGoogleError = () => {
+    onNotice?.({
+      type: 'error',
+      title: 'Google sign-in unsuccessful',
+      description:
+        'Google authentication failed. Please try again.'
+    });
+  };
+
   return (
     <section
       className="bc-form-panel"
@@ -213,7 +282,10 @@ export default function LoginForm({ onNotice, onForgot }) {
 
         </form>
 
+        {/* Google Login + Existing Facebook Button */}
         <LoginSocial
+          onGoogle={handleGoogle}
+          onGoogleError={handleGoogleError}
           onSocial={name => onNotice?.({
             type: 'info',
             title: `${name} sign-in is not connected`,
