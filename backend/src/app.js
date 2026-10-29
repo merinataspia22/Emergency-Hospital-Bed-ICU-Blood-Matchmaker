@@ -2,14 +2,15 @@ import express from "express";
 import cors from "cors";
 
 import bloodRequestRoutes from "./routes/bloodRequest.routes.js";
-import { notFound, errorHandler } from "./middleware/error.middleware.js"; 
+import { notFound, errorHandler } from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
-import contactRoutes from "./routes/contact.routes.js";
 import donorRoutes from "./routes/donor.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import hospitalRoutes from "./routes/hospital.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import member5Routes from "../member5-blood-bank/src/routes/member5.routes.js";
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/hospitals", hospitalRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/bloodbank", member5Routes); // Member 5: blood bank dashboard
 
 app.use(notFound);
 app.use(errorHandler);

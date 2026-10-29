@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useStore, syncPartner } from "../services/bloodBankStore";
 import { P } from "./bbIcons";
+import { useAuth } from "../auth/AuthContext";
+import { getMyStock, setGroupUnits } from "../api/bloodBankApi";
 import "./BloodBankDashboard.css";
 
 const Ic = ({ n }) => <svg className="ic" viewBox="0 0 24 24" aria-hidden="true" dangerouslySetInnerHTML={{ __html: P[n] }} />;
 const GROUPS = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 const OWN = "cmch", HOSP = "Chattogram Medical College Hospital";
 const now = Date.now();
-const SEED_STOCK = { "A+": 128, "A-": 42, "B+": 96, "B-": 28, "O+": 186, "O-": 55, "AB+": 38, "AB-": 16 };
+const EMPTY_STOCK = { "A+": 0, "A-": 0, "B+": 0, "B-": 0, "O+": 0, "O-": 0, "AB+": 0, "AB-": 0 };
 const SEED_REQ = [
   ["O+", "Rahim Uddin", "Chattogram Medical College", 3, "Surgery (Emergency)", "Urgent", 10],
   ["A+", "Shabana Khatun", "Aga Khan Hospital", 2, "Postpartum Hemorrhage", "High", 28],
@@ -53,18 +55,44 @@ function Modal({ title, onClose, onSave, children }) {
 }
 
 export default function BloodBankDashboard() {
-  const [stock, setStock] = useStore("bc_blood_stock", SEED_STOCK);
+  const { user, logout } = useAuth();
+  const [stock, setStockState] = useState(EMPTY_STOCK);
+  const [stockReady, setStockReady] = useState(false);
   const [reqs, setReqs] = useStore("bc_blood_requests", SEED_REQ);
   const [xm, setXm] = useStore("bc_crossmatch", SEED_XM);
   const [beds, setBeds] = useStore("bc_hospital_beds", SEED_BEDS);
   const [appts, setAppts] = useStore("bc_appointments", SEED_APPT);
   const [modal, setModal] = useState(null), [draft, setDraft] = useState({}), [msg, setMsg] = useState(""), [q, setQ] = useState("");
-  const toast = (m) => { setMsg(m); setTimeout(() => setMsg(""), 2000); };
+  const toast = (m) => { setMsg(m); setTimeout(() => setMsg(""), 2500); };
+
+  // Blood stock now comes from the database (backend), not localStorage.
+  useEffect(() => {
+    let off = false;
+    getMyStock()
+      .then((d) => { if (!off) { setStockState({ ...EMPTY_STOCK, ...d.stock }); setStockReady(true); } })
+      .catch((e) => { if (!off) toast(e.message || "Could not load blood stock"); });
+    return () => { off = true; };
+  }, []);
+
+  // Saves only the changed groups to the database, then updates the screen.
+  const persistStock = async (next) => {
+    const changed = GROUPS.filter((g) => (Number(next[g]) || 0) !== (Number(stock[g]) || 0));
+    if (!changed.length) return true;
+    try {
+      await Promise.all(changed.map((g) => setGroupUnits(g, Number(next[g]) || 0)));
+      setStockState({ ...stock, ...next });
+      return true;
+    } catch (e) {
+      toast(e.message || "Could not save blood stock");
+      return false;
+    }
+  };
 
   const own = beds.find((b) => b.id === OWN) || SEED_BEDS[0];
   const total = own.generalTotal + own.icuTotal, avail = own.general + own.icu, occ = total - avail, pct = Math.round((occ / total) * 100);
   // Page 4 (Hospital Beds) er "Blood Support" + Page 10 (Admin) er Hospital Partners er sathe sync
   useEffect(() => {
+    if (!stockReady) return;
     const units = GROUPS.reduce((t, g) => t + (Number(stock[g]) || 0), 0);
     const blood = units >= 200 ? "Available" : units > 0 ? "Limited" : "Unavailable";
     syncPartner({ name: HOSP, location: "Chattogram", phone: "031-642100", status: "Active", updatedAt: Date.now() });
@@ -72,7 +100,7 @@ export default function BloodBankDashboard() {
       const next = { ...own, blood };
       setBeds(beds.some((b) => b.id === OWN) ? beds.map((b) => (b.id === OWN ? next : b)) : [...beds, next]);
     }
-  }, [stock, beds]);
+  }, [stock, beds, stockReady]);
 
   const visible = [...reqs].filter((r) => r.status !== "Rejected" && (!q || (r.patientName + r.hospital).toLowerCase().includes(q.toLowerCase()))).sort((a, b) => b.createdAt - a.createdAt).slice(0, 4);
 
@@ -82,9 +110,9 @@ export default function BloodBankDashboard() {
     setXm([...xm, { id: "x" + Date.now(), patient: r.patientName, group: r.bloodGroup, units: Number(r.units) || 1, status: "Pending" }]);
     toast(have < need ? `Approved, kintu ${r.bloodGroup} stock kom (${have} unit)` : "Request approved, cross-match e gelo");
   };
-  const xmAct = (r) => {
+  const xmAct = async (r) => {
     if (r.status === "Pending") { setXm(xm.map((x) => (x.id === r.id ? { ...x, status: "In Progress" } : x))); return toast("Cross-match started"); }
-    setStock({ ...stock, [r.group]: Math.max(0, (stock[r.group] || 0) - r.units) });
+    if (!(await persistStock({ ...stock, [r.group]: Math.max(0, (stock[r.group] || 0) - r.units) }))) return;
     setXm(xm.map((x) => (x.id === r.id ? { ...x, status: "Completed" } : x)));
     toast(`${r.units} unit ${r.group} stock theke kombe gelo`);
   };
@@ -92,9 +120,9 @@ export default function BloodBankDashboard() {
 
   const openStock = () => { setDraft({ ...stock }); setModal("stock"); };
   const openBeds = () => { setDraft({ general: own.general, icu: own.icu }); setModal("beds"); };
-  const saveStock = () => {
-    const s = {}; GROUPS.forEach((g) => (s[g] = Math.max(0, Number(draft[g]) || 0)));
-    setStock(s); setModal(null); toast("Blood stock updated");
+  const saveStock = async () => {
+    const s = {}; GROUPS.forEach((g) => (s[g] = Math.max(0, Math.floor(Number(draft[g]) || 0))));
+    if (await persistStock(s)) { setModal(null); toast("Blood stock updated"); }
   };
   const saveBeds = () => {
     const general = Math.min(own.generalTotal, Math.max(0, Number(draft.general) || 0)), icu = Math.min(own.icuTotal, Math.max(0, Number(draft.icu) || 0));
@@ -110,13 +138,13 @@ export default function BloodBankDashboard() {
         <a className="logo" href="/"><span className="drop" />Blood<b>Connect</b></a>
         <label className="search"><Ic n="search" /><input type="search" placeholder="Search donors, requests, hospitals..." aria-label="Search" value={q} onChange={(e) => setQ(e.target.value)} /></label>
         <button className="bell" aria-label="Notifications"><Ic n="bell" /><em>3</em></button>
-        <div className="user"><span className="av" style={{ background: "#c98" }}>AR</span><div><strong>Dr. Ayesha Rahman</strong><small>Blood Bank Officer</small></div></div>
+        <div className="user"><span className="av" style={{ background: "#c98" }}>{ini(user?.name || "Blood Bank")}</span><div><strong>{user?.name || "Blood Bank Officer"}</strong><small>Blood Bank Officer</small></div></div>
       </header>
       <div className="shell">
         <nav className="side" aria-label="Main">
           {NAV.map(([l, i, href], k) => <a key={l} href={href || "#"} className={k ? "" : "on"} onClick={(e) => { if (!href) { e.preventDefault(); if (l === "Blood Inventory") openStock(); else if (k) toast(l + " page coming soon"); } }}><Ic n={i} />{l}</a>)}
           <div className="promo"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 40s-14-8-14-18a8 8 0 0 1 14-5 8 8 0 0 1 14 5c0 10-14 18-14 18z" fill="#d71a2c" /><path d="M32 22s4 4 4 7a4 4 0 0 1-8 0c0-3 4-7 4-7z" fill="#fff" /><path d="M8 44c6 0 10 4 14 8l10 2 12-4c4-1 8 1 8 4" fill="none" stroke="#e8a77a" strokeWidth="5" strokeLinecap="round" /></svg><strong>Together<span>We Save Lives</span></strong><hr /></div>
-          <a href="/login" style={{ marginTop: 6, color: "var(--red)" }}><Ic n="out" />Logout</a>
+          <a href="/login" onClick={logout} style={{ marginTop: 6, color: "var(--red)" }}><Ic n="out" />Logout</a>
         </nav>
 
         <main className="grid">
