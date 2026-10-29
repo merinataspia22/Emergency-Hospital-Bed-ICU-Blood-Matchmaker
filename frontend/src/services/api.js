@@ -1,6 +1,11 @@
 
 const TOKEN_KEY = "bc_access_token_v1";
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "/api"
+).replace(/\/+$/, "");
+
+// Read shared authentication token
 export function readToken() {
   try {
     return sessionStorage.getItem(TOKEN_KEY);
@@ -9,14 +14,17 @@ export function readToken() {
   }
 }
 
+// Save shared authentication token
 export function saveToken(token) {
   sessionStorage.setItem(TOKEN_KEY, token);
 }
 
+// Clear shared authentication token
 export function clearToken() {
   sessionStorage.removeItem(TOKEN_KEY);
 }
 
+// Make API requests using the shared token
 export async function apiRequest(
   path,
   { method = "GET", body, token } = {}
@@ -29,14 +37,22 @@ export async function apiRequest(
     headers["Content-Type"] = "application/json";
   }
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
+  const authToken = token || readToken();
+
+  if (authToken) {
+    headers.Authorization = `Bearer ${authToken}`;
   }
+
+  const normalizedPath = path.startsWith("/")
+    ? path
+    : `/${path}`;
+
+  const requestUrl = `${API_BASE_URL}${normalizedPath}`;
 
   let response;
 
   try {
-    response = await fetch(`http://localhost:5000/api${path}`, {
+    response = await fetch(requestUrl, {
       method,
       headers,
       ...(body !== undefined
@@ -53,8 +69,7 @@ export async function apiRequest(
 
   if (!response.ok || !result?.success) {
     throw new Error(
-      result?.message ||
-      `Request failed (${response.status})`
+      result?.message || `Request failed (${response.status})`
     );
   }
 
