@@ -1,4 +1,8 @@
 
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || ""
+).replace(/\/+$/, "");
+
 const TOKEN_KEY = "bc_access_token_v1";
 
 export function readToken() {
@@ -36,7 +40,9 @@ export async function apiRequest(
   let response;
 
   try {
-    response = await fetch(`/api${path}`, {
+    response = await 
+fetch(`${API_BASE_URL}/api${path}`, {
+
       method,
       headers,
       ...(body !== undefined
