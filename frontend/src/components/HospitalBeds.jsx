@@ -159,6 +159,7 @@ export default function HospitalBeds() {
     fetch("http://localhost:5000/api/hospitals")
       .then((res) => res.json())
       .then((data) => {
+           if (!Array.isArray(data)) return;
         setHospitals(data);
         if (data.length > 0) {
           setSelectedId(data[0]._id || data[0].id);
