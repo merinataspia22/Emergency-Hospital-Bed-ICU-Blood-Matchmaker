@@ -139,3 +139,16 @@
 .bbd .ma{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
 .bbd .empty{color:var(--mut);padding:14px;text-align:center}
 .bbd .side a.on,.bbd .manage{cursor:pointer}
+
+/* Blood Requests / Donor Appointments pages */
+.bbd .page{min-width:0}
+.bbd .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.bbd .tabs button{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #d9dce3;font-weight:600;font-size:12px;background:#fff}
+.bbd .tabs button em{font-style:normal;background:#f4f5f8;border-radius:10px;padding:1px 7px;font-size:11px;color:var(--mut)}
+.bbd .tabs button.on{background:var(--red);border-color:var(--red);color:#fff}
+.bbd .tabs button.on em{background:rgba(255,255,255,.25);color:#fff}
+.bbd .acts{display:flex;gap:6px;justify-content:flex-end}
+.bbd .page .rlist .acts .btn{min-width:84px}
+.bbd .page td .acts .btn{width:auto;min-width:76px;padding:6px 12px}
+.bbd .page table{min-width:640px}
+@media (max-width:860px){.bbd .page .rlist li{grid-template-columns:44px 1fr}.bbd .page .rlist .acts{grid-column:1/-1;justify-content:flex-start}}

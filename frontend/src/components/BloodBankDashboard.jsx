@@ -20,6 +20,7 @@ const SEED_XM = [["Nasir Ahmed", "A+", 2, "Pending"], ["Lamia Akter", "O-", 1, "
 const SEED_APPT = [["Nafisa Alam", "A+", "12 Jun 2025, 10:00 AM", "0171XXXXXXX", "Confirmed"], ["Tawhid Hasan", "O+", "12 Jun 2025, 12:30 PM", "0182XXXXXXX", "Confirmed"], ["Sadia Rahman", "B+", "13 Jun 2025, 09:00 AM", "0167XXXXXXX", "Pending"], ["Arif Hossain", "O-", "13 Jun 2025, 11:00 AM", "0193XXXXXXX", "Confirmed"]].map(([name, bloodGroup, datetime, contact, status], i) => ({ id: "a" + i, name, bloodGroup, datetime, contact, status }));
 const SEED_BEDS = [{ id: OWN, name: HOSP, area: "Chawkbazar, Chattogram", general: 70, icu: 14, generalTotal: 240, icuTotal: 60, blood: "Available", phone: "031-642100", hours: "24 Hours Open" }];
 const NAV = [["Dashboard", "grid"], ["Blood Inventory", "drop"], ["Blood Requests", "doc"], ["Donor Appointments", "cal"], ["Hospital Beds", "bed", "/hospital-beds"], ["Donors", "users", "/find-donor"], ["Hospitals", "hosp", "/hospital-beds"], ["Reports", "chart"], ["Notifications", "bell"], ["Settings", "gear"]];
+const VIEWS = { Dashboard: "dash", "Blood Requests": "requests", "Donor Appointments": "appts" };
 const C = [60, 80, 65, 100, 120, 105, 130, 115, 125, 145, 140, 185], U = [28, 40, 32, 58, 68, 72, 90, 78, 84, 95, 92, 125];
 const colors = ["#c98", "#a87", "#d9a", "#8ab", "#b96", "#9b8"];
 const ini = (n) => n.replace(/^(Dr\.|Mst\.)\s*/, "").split(" ").map((w) => w[0]).join("").slice(0, 2);
@@ -63,6 +64,7 @@ export default function BloodBankDashboard() {
   const [beds, setBeds] = useStore("bc_hospital_beds", SEED_BEDS);
   const [appts, setAppts] = useStore("bc_appointments", SEED_APPT);
   const [modal, setModal] = useState(null), [draft, setDraft] = useState({}), [msg, setMsg] = useState(""), [q, setQ] = useState("");
+  const [view, setView] = useState("dash"), [rf, setRf] = useState("All"), [af, setAf] = useState("All");
   const toast = (m) => { setMsg(m); setTimeout(() => setMsg(""), 2500); };
 
   // Blood stock now comes from the database (backend), not localStorage.
@@ -117,6 +119,18 @@ export default function BloodBankDashboard() {
     toast(`${r.units} unit ${r.group} stock theke kombe gelo`);
   };
   const confirmAppt = (a) => { setAppts(appts.map((x) => (x.id === a.id ? { ...x, status: "Confirmed" } : x))); toast("Appointment confirmed"); };
+  const reject = (r) => { setReqs(reqs.map((x) => (x.id === r.id ? { ...x, status: "Rejected" } : x))); toast("Request rejected"); };
+  const cancelAppt = (a) => { setAppts(appts.map((x) => (x.id === a.id ? { ...x, status: "Cancelled" } : x))); toast("Appointment cancelled"); };
+  const goto = (v) => { setView(v); window.scrollTo({ top: 0 }); };
+
+  // Full lists for the Blood Requests / Donor Appointments pages
+  const reqStatus = (r) => r.status || "Pending";
+  const needle = q.toLowerCase();
+  const allReqs = [...reqs].sort((a, b) => b.createdAt - a.createdAt).filter((r) => !needle || (r.patientName + r.hospital + r.bloodGroup).toLowerCase().includes(needle));
+  const shownReqs = allReqs.filter((r) => rf === "All" || reqStatus(r) === rf);
+  const allAppts = appts.filter((a) => !needle || (a.name + a.bloodGroup + a.contact).toLowerCase().includes(needle));
+  const shownAppts = allAppts.filter((a) => af === "All" || a.status === af);
+  const cnt = (list, f, st) => (st === "All" ? list.length : list.filter((x) => f(x) === st).length);
 
   const openStock = () => { setDraft({ ...stock }); setModal("stock"); };
   const openBeds = () => { setDraft({ general: own.general, icu: own.icu }); setModal("beds"); };
@@ -130,7 +144,7 @@ export default function BloodBankDashboard() {
     setBeds(beds.some((b) => b.id === OWN) ? beds.map((b) => (b.id === OWN ? next : b)) : [...beds, next]);
     setModal(null); toast("Bed availability updated");
   };
-  const quick = [["Update Blood Stock", "db", openStock], ["Approve Blood Request", "doc", () => document.getElementById("bb-req")?.scrollIntoView({ behavior: "smooth" })], ["Manage Hospital Beds", "bed", openBeds], ["View Reports", "report"], ["Manage Donors", "users"], ["Send Notifications", "send"]];
+  const quick = [["Update Blood Stock", "db", openStock], ["Approve Blood Request", "doc", () => goto("requests")], ["Manage Hospital Beds", "bed", openBeds], ["View Reports", "report"], ["Manage Donors", "users"], ["Send Notifications", "send"]];
 
   return (
     <div className="bbd">
@@ -142,12 +156,12 @@ export default function BloodBankDashboard() {
       </header>
       <div className="shell">
         <nav className="side" aria-label="Main">
-          {NAV.map(([l, i, href], k) => <a key={l} href={href || "#"} className={k ? "" : "on"} onClick={(e) => { if (!href) { e.preventDefault(); if (l === "Blood Inventory") openStock(); else if (k) toast(l + " page coming soon"); } }}><Ic n={i} />{l}</a>)}
+          {NAV.map(([l, i, href]) => <a key={l} href={href || "#"} className={VIEWS[l] === view ? "on" : ""} onClick={(e) => { if (!href) { e.preventDefault(); if (VIEWS[l]) goto(VIEWS[l]); else if (l === "Blood Inventory") openStock(); else toast(l + " page coming soon"); } }}><Ic n={i} />{l}</a>)}
           <div className="promo"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 40s-14-8-14-18a8 8 0 0 1 14-5 8 8 0 0 1 14 5c0 10-14 18-14 18z" fill="#d71a2c" /><path d="M32 22s4 4 4 7a4 4 0 0 1-8 0c0-3 4-7 4-7z" fill="#fff" /><path d="M8 44c6 0 10 4 14 8l10 2 12-4c4-1 8 1 8 4" fill="none" stroke="#e8a77a" strokeWidth="5" strokeLinecap="round" /></svg><strong>Together<span>We Save Lives</span></strong><hr /></div>
           <a href="/login" onClick={logout} style={{ marginTop: 6, color: "var(--red)" }}><Ic n="out" />Logout</a>
         </nav>
 
-        <main className="grid">
+        {view === "dash" ? <main className="grid">
           <section className="card inv">
             <div className="ch"><h2><i className="red"><Ic n="drop" /></i>Blood Inventory</h2><button className="pill" onClick={openStock}><Ic n="db" />Update Stock</button></div>
             <div className="tiles">{GROUPS.map((g) => <div key={g} className={"tile" + (g.includes("-") ? " neg" : "")}><div className="t"><svg viewBox="0 0 22 28" aria-hidden="true"><path d="M11 0s11 12 11 19a11 11 0 0 1-22 0C0 12 11 0 11 0z" /></svg><div><span className="g">{g}</span><b>{stock[g] ?? 0}</b><span>Units</span></div></div></div>)}</div>
@@ -173,7 +187,7 @@ export default function BloodBankDashboard() {
           </section>
 
           <section className="card req" id="bb-req">
-            <div className="ch"><h2><i className="red"><Ic n="cal" /></i>Incoming Blood Requests</h2><a href="#" className="va">View All</a></div>
+            <div className="ch"><h2><i className="red"><Ic n="cal" /></i>Incoming Blood Requests</h2><a href="#" className="va" onClick={(e) => { e.preventDefault(); goto("requests"); }}>View All</a></div>
             <ul className="rlist">
               {visible.length === 0 && <li className="empty">Kono request nei</li>}
               {visible.map((r) => <li key={r.id}><div className="bg">{r.bloodGroup}</div><div><strong>{r.patientName}</strong><span className="h">{r.hospital}</span><small>{r.units} Unit{r.units > 1 ? "s" : ""}{r.details ? " • " + r.details : ""}{" • In stock: " + (stock[r.bloodGroup] ?? 0)}</small></div><span className={"tag " + lvl(r.urgency)}>{r.urgency || "Normal"}</span><span className="ago">{ago(r.createdAt)}</span>
@@ -189,7 +203,7 @@ export default function BloodBankDashboard() {
           </section>
 
           <section className="card appt">
-            <div className="ch"><h2><i className="red"><Ic n="cal" /></i>Upcoming Donor Appointments</h2><a href="#" className="va">View All</a></div>
+            <div className="ch"><h2><i className="red"><Ic n="cal" /></i>Upcoming Donor Appointments</h2><a href="#" className="va" onClick={(e) => { e.preventDefault(); goto("appts"); }}>View All</a></div>
             <div className="tw"><table><thead><tr><th>Name</th><th>Blood Group</th><th>Date & Time</th><th>Contact</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{appts.slice(0, 4).map((a, i) => <tr key={a.id}><td><span className="nm"><span className="av" style={{ background: colors[i % 6] }}>{ini(a.name)}</span>{a.name}</span></td><td>{a.bloodGroup}</td><td>{a.datetime}</td><td>{a.contact}</td><td><span className={"tag " + (a.status === "Confirmed" ? "ok" : "pending")}>{a.status}</span></td>
                 <td>{a.status === "Pending" ? <button className="btn" onClick={() => confirmAppt(a)}>Confirm</button> : <button className="btn out">View</button>}</td></tr>)}</tbody></table></div>
@@ -199,7 +213,32 @@ export default function BloodBankDashboard() {
             <div className="ch"><h2><i className="red"><Ic n="gear" /></i>Quick Actions</h2></div>
             <div className="qgrid">{quick.map(([l, i, fn]) => <button key={l} onClick={fn || (() => toast(l + " coming soon"))}><span className="red"><Ic n={i} /></span>{l}</button>)}</div>
           </section>
-        </main>
+        </main> : view === "requests" ? (
+          <main className="page">
+            <section className="card">
+              <div className="ch"><h2><i className="red"><Ic n="doc" /></i>Blood Requests</h2><button className="pill" onClick={() => goto("dash")}>Back to Dashboard</button></div>
+              <div className="tabs" role="tablist">{["All", "Pending", "Approved", "Rejected"].map((st) => <button key={st} role="tab" aria-selected={rf === st} className={rf === st ? "on" : ""} onClick={() => setRf(st)}>{st}<em>{cnt(allReqs, reqStatus, st)}</em></button>)}</div>
+              <ul className="rlist">
+                {shownReqs.length === 0 && <li className="empty">Kono request nei</li>}
+                {shownReqs.map((r) => <li key={r.id}><div className="bg">{r.bloodGroup}</div><div><strong>{r.patientName}</strong><span className="h">{r.hospital}</span><small>{r.units} Unit{r.units > 1 ? "s" : ""}{r.details ? " • " + r.details : ""}{" • In stock: " + (stock[r.bloodGroup] ?? 0)}</small></div><span className={"tag " + lvl(r.urgency)}>{r.urgency || "Normal"}</span><span className="ago">{ago(r.createdAt)}</span>
+                  <div className="acts">{reqStatus(r) === "Approved" ? <button className="btn done"><Ic n="check" />Approved</button> : reqStatus(r) === "Rejected" ? <span className="tag urgent">Rejected</span> : <><button className="btn" onClick={() => approve(r)}><Ic n="check" />Approve</button><button className="btn out" onClick={() => reject(r)}>Reject</button></>}</div></li>)}
+              </ul>
+            </section>
+          </main>
+        ) : (
+          <main className="page">
+            <section className="card">
+              <div className="ch"><h2><i className="red"><Ic n="cal" /></i>Donor Appointments</h2><button className="pill" onClick={() => goto("dash")}>Back to Dashboard</button></div>
+              <div className="tabs" role="tablist">{["All", "Pending", "Confirmed", "Cancelled"].map((st) => <button key={st} role="tab" aria-selected={af === st} className={af === st ? "on" : ""} onClick={() => setAf(st)}>{st}<em>{cnt(allAppts, (a) => a.status, st)}</em></button>)}</div>
+              <div className="tw"><table><thead><tr><th>Name</th><th>Blood Group</th><th>Date & Time</th><th>Contact</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  {shownAppts.length === 0 && <tr><td colSpan="6" className="empty">Kono appointment nei</td></tr>}
+                  {shownAppts.map((a, i) => <tr key={a.id}><td><span className="nm"><span className="av" style={{ background: colors[i % 6] }}>{ini(a.name)}</span>{a.name}</span></td><td>{a.bloodGroup}</td><td>{a.datetime}</td><td>{a.contact}</td><td><span className={"tag " + (a.status === "Confirmed" ? "ok" : a.status === "Cancelled" ? "urgent" : "pending")}>{a.status}</span></td>
+                    <td><div className="acts">{a.status === "Pending" && <button className="btn" onClick={() => confirmAppt(a)}>Confirm</button>}{a.status !== "Cancelled" && <button className="btn out" onClick={() => cancelAppt(a)}>Cancel</button>}</div></td></tr>)}
+                </tbody></table></div>
+            </section>
+          </main>
+        )}
       </div>
 
       {modal === "stock" && <Modal title="Update Blood Stock" onClose={() => setModal(null)} onSave={saveStock}>{GROUPS.map((g) => <label key={g}>{g} (units)<input type="number" min="0" value={draft[g] ?? 0} onChange={(e) => setDraft({ ...draft, [g]: e.target.value })} /></label>)}</Modal>}
