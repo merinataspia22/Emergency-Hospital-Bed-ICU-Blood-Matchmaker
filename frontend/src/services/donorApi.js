@@ -2,8 +2,9 @@
 // Donor server alada (port 5001), tai nijer base URL. Token member 1 er readToken theke.
 import { readToken } from "./api.js";
 
-// Donor server (port 5001) ekhon jei host e website cholche sei host e khuje. Alada .env lagbe na.
-const BASE = import.meta.env.VITE_DONOR_API_URL || `http://${window.location.hostname}:5001/api`;
+// Website nijer origin e "/api/donors" ar "/api/messages" e call kore. Vite proxy (vite.config.js) eta donor server (5001) e pathay.
+// Tai local, GitHub Codespaces, jekhaneii chalano hok, alada URL ba port visibility lagbe na.
+const BASE = import.meta.env.VITE_DONOR_API_URL || "/api";
 
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -20,7 +21,7 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error("Cannot reach the donor server (port 5001). Start it: cd backend/member2-donor, npm run dev");
+    throw new Error("Donor server is not reachable. Make sure backend/member2-donor is running (npm run dev) and vite.config.js proxies /api/donors.");
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.success === false) {
