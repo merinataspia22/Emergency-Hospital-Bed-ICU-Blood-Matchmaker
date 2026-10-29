@@ -16,6 +16,8 @@ import {
   Heart,
 } from "lucide-react";
 
+const API_BASE = "";
+
 const areas = [
   "Chawkbazar",
   "Agrabad",
@@ -154,9 +156,8 @@ export default function HospitalBeds() {
   const [heroOk, setHeroOk] = useState(true);
   const [mapOk, setMapOk] = useState(true);
 
-  // Fetching live hospitals data from backend API connected to MongoDB Atlas
   useEffect(() => {
-    fetch("http://localhost:5000/api/hospitals")
+    fetch(`${API_BASE}/api/hospitals`)
       .then((res) => res.json())
       .then((data) => {
            if (!Array.isArray(data)) return;

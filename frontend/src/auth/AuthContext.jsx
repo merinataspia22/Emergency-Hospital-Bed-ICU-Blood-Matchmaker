@@ -97,6 +97,43 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  // Google Login / Signup - Member 1
+  const googleLogin = async (credential, profile = {}) => {
+    if (!credential || typeof credential !== "string") {
+      throw new Error("Google sign-in credential is missing.");
+    }
+
+    const data = await apiRequest("/auth/google", {
+      method: "POST",
+      body: {
+        ...profile,
+        credential,
+      },
+    });
+
+    // New Google user needs additional registration details.
+    if (data?.needsProfile) {
+      return {
+        needsProfile: true,
+        googleProfile: data.googleProfile,
+      };
+    }
+
+    // Login existing linked Google user or completed signup.
+    if (!data?.user || !data?.accessToken) {
+      throw new Error("Invalid response from the Google login server.");
+    }
+
+    // Use the same JWT session as normal login.
+    saveToken(data.accessToken);
+    setUser(data.user);
+
+    return {
+      needsProfile: false,
+      user: data.user,
+    };
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
@@ -107,6 +144,7 @@ export function AuthProvider({ children }) {
       user,
       loading,
       login,
+      googleLogin,
       register,
       logout,
       isAuthenticated: Boolean(user),
