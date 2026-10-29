@@ -1,8 +1,18 @@
-
 export async function apiFetch(url, options = {}) {
   const token = localStorage.getItem("accessToken");
 
-  const response = await fetch(url, {
+  // Handle absolute URL or http:// to relative path to avoid Mixed Content errors in Codespaces
+  let fixedUrl = url;
+  if (url && url.startsWith("http")) {
+    try {
+      const urlObj = new URL(url);
+      fixedUrl = urlObj.pathname + urlObj.search;
+    } catch (e) {
+      // fallback if URL parsing fails
+    }
+  }
+
+  const response = await fetch(fixedUrl, {
     ...options,
     headers: {
       "Content-Type": "application/json",

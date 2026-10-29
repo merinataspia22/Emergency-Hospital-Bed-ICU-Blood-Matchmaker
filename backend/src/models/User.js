@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
@@ -10,26 +9,28 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
+      required: false, // Made optional to prevent validation errors on older mock users
       lowercase: true,
       trim: true,
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: false,
       select: false,
     },
     role: {
       type: String,
-      enum: ["donor", "recipient", "staff", "admin"],
-      required: true,
+      enum: ["donor", "recipient", "staff", "admin", "Donor", "Admin", "Staff", "Patient"],
       default: "recipient",
+    },
+    type: {
+      type: String,
+      default: "Donor",
     },
     bloodGroup: {
       type: String,
@@ -39,14 +40,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    loc: {
+      type: String,
+      default: "",
+    },
     lastDonation: {
       type: Date,
       default: null,
     },
+    joined: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
-
 
 const User =
   mongoose.models.User || mongoose.model("User", userSchema);
