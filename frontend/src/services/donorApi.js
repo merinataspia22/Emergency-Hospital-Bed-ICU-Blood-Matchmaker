@@ -1,10 +1,10 @@
 // Member 2: Donor API calls (Find Donor + Donor Dashboard + Messages)
-// Donor server alada (port 5001), tai nijer base URL. Token member 1 er readToken theke.
+// Donor ar message API ekhon Main backend e (port 5000). Token member 1 er readToken theke.
 import { readToken } from "./api.js";
 
-// Website nijer origin e "/api/donors" ar "/api/messages" e call kore. Vite proxy (vite.config.js) eta donor server (5001) e pathay.
-// Tai local, GitHub Codespaces, jekhaneii chalano hok, alada URL ba port visibility lagbe na.
-const BASE = import.meta.env.VITE_DONOR_API_URL || "/api";
+// Local ar Codespaces e "/api" e call jay, Vite proxy (vite.config.js) eta Main backend e pathay.
+// Deploy e VITE_API_URL (jemon https://my-backend.com) dile sheta use hobe. Onno member ra-o ei variable-i use kore.
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api";
 
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -21,7 +21,7 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
-    throw new Error("Donor server is not reachable. Make sure backend/member2-donor is running (npm run dev) and vite.config.js proxies /api/donors.");
+       throw new Error("Server is not reachable. Make sure the backend (backend folder, npm run dev) is running.");
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.success === false) {

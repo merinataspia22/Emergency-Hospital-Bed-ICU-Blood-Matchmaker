@@ -9,15 +9,7 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      // Member 2: donor ar message API alada server e (5001). "/api" er AGE thakte hobe.
-      "/api/donors": {
-        target: "http://127.0.0.1:5001",
-        changeOrigin: true,
-      },
-      "/api/messages": {
-        target: "http://127.0.0.1:5001",
-        changeOrigin: true,
-      },
+      // Shob API (donor, message shoho) Main backend e (5000)
       "/api": {
         target: "http://127.0.0.1:5000",
         changeOrigin: true,
