@@ -176,9 +176,11 @@ export default function AdminDashboard() {
     fetch(`${API_BASE}/api/admin/users`)
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          const mappedUsers = data.map((u) => ({
-            id: u._id,
+        const userArray = Array.isArray(data) ? data : (data.users || data.data || []);
+        
+        if (userArray.length > 0) {
+          const mappedUsers = userArray.map((u) => ({
+            id: u._id || u.id,
             name: u.name || "User",
             type: u.type || u.role || "Donor",
             loc: u.loc || u.location || "Chattogram",
@@ -186,17 +188,19 @@ export default function AdminDashboard() {
             joined: u.joined || (u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "Recently"),
           }));
           setUsers(mappedUsers);
-          const donorCount = data.filter(u => (u.type === 'Donor' || u.role === 'donor')).length;
+          const donorCount = userArray.filter(u => (u.type === 'Donor' || u.role === 'donor' || u.type === 'donor')).length;
           setStats((prev) =>
             prev.map((s) => {
-              if (s.label === "Total Users") return { ...s, value: String(data.length) };
-              if (s.label === "Registered Donors") return { ...s, value: String(donorCount || data.length) };
+              if (s.label === "Total Users") return { ...s, value: String(userArray.length) };
+              if (s.label === "Registered Donors") return { ...s, value: String(donorCount || userArray.length) };
               return s;
             })
           );
+        } else {
+          setUsers([]);
         }
       })
-      .catch((err) => console.error("Error fetching users:", err));
+      .catch((err) => console.error("Error fetching users from Atlas:", err));
   };
 
   const fetchRequests = () => {
@@ -244,13 +248,23 @@ export default function AdminDashboard() {
     fetchHospitals();
     fetchUsers();
     fetchRequests();
+    
     fetch(`${API_BASE}/api/admin/overview`)
       .then((res) => res.json())
       .then((data) => {
-        if (data) {
+        const overview = data?.data || data;
+        if (overview) {
           setStats((prev) =>
             prev.map((s) => {
-              if (s.label === "Completed Donations" && data.completedDonations !== undefined) return { ...s, value: String(data.completedDonations) };
+              if (s.label === "Total Users" && overview.totalUsers !== undefined) {
+                return { ...s, value: String(overview.totalUsers) };
+              }
+              if (s.label === "Registered Donors" && overview.registeredDonors !== undefined) {
+                return { ...s, value: String(overview.registeredDonors) };
+              }
+              if (s.label === "Completed Donations" && overview.completedDonations !== undefined) {
+                return { ...s, value: String(overview.completedDonations) };
+              }
               return s;
             })
           );
