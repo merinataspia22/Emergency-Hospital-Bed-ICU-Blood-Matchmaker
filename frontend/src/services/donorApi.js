@@ -2,7 +2,9 @@
 // Donor server alada (port 5001), tai nijer base URL. Token member 1 er readToken theke.
 import { readToken } from "./api.js";
 
-const BASE = import.meta.env.VITE_DONOR_API_URL || "http://localhost:5001/api";
+// Website nijer origin e "/api/donors" ar "/api/messages" e call kore. Vite proxy (vite.config.js) eta donor server (5001) e pathay.
+// Tai local, GitHub Codespaces, jekhaneii chalano hok, alada URL ba port visibility lagbe na.
+const BASE = import.meta.env.VITE_DONOR_API_URL || "/api";
 
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
@@ -11,11 +13,16 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
     if (!token) throw new Error("Please log in first");
     headers.Authorization = `Bearer ${token}`;
   }
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } catch {
+    throw new Error("Donor server is not reachable. Make sure backend/member2-donor is running (npm run dev) and vite.config.js proxies /api/donors.");
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || json.success === false) {
     throw new Error(json.message || "Something went wrong.");
