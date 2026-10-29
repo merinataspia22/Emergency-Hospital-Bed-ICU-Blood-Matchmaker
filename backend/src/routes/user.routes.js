@@ -5,8 +5,11 @@ import {
   updateUser,
   deleteUser,
 } from "../controllers/user.controller.js";
+import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();
+
+router.use(protect, authorizeRoles("admin"));
 
 router.get("/", getUsers);
 router.post("/", createUser);
