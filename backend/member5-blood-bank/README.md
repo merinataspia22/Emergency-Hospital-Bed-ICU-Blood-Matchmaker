@@ -6,12 +6,12 @@ This is an isolated module intended to reduce merge conflicts. It does **not** m
 - `src/models/BloodStock.model.js`: inventory model, unique per hospital + blood group.
 - `src/controllers/member5.controller.js`: stock dashboard/update, hospital request dashboard, staff listing.
 - `src/routes/member5.routes.js`: route definitions expecting the shared `protect` and `authorizeRoles` middleware.
-- `docs/INTEGRATION.md`: integration steps and important limitations.
+- `src/models/StaffProfile.model.js`: links a staff user to their hospital.
+- `src/scripts/seedStaff.js`: creates a demo staff account, hospital link and starter stock.
+- `docs/INTEGRATION.md`: mount steps and endpoints.
 
 ## Current assumptions
 - Shared backend is ES modules and uses Mongoose.
-- Shared auth middleware exports `protect` and `authorizeRoles` from `backend/src/middleware/auth.middleware.js`.
-- Existing `BloodRequest` model is `backend/src/models/BloodRequest.js` and has `hospitalName`, `hospitalLocation`, `bloodGroup`, `units`, `status`, and timestamps.
-- `User` model has `name`, `email`, `phone`, and `role`.
-
-This module is a starting implementation. Hospital ownership is not represented in the current shared User model, so routes use a required `hospitalName` query parameter for the dashboard and must be tightened with a real staff-to-hospital relationship before production. Only admin can list staff. Do not expose staff data publicly.
+- Auth middleware (`protect`, `authorizeRoles`) comes from `backend/src/middleware/auth.middleware.js`.
+- `BloodRequest` has `hospitalName`, `hospitalLocation`, `bloodGroup`, `units`, `status`.
+- Hospital ownership is stored in this module's `StaffProfile` (shared `User` model is untouched). The hospital is derived from the logged-in user, never from client input.

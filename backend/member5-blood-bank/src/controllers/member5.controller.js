@@ -1,8 +1,8 @@
 
 import BloodStock, {
-  BLOOD_GROUPS,
-} from "../../../src/models/BloodStock.js";
-import User from "../../../src/models/User.js";
+  MEMBER5_BLOOD_GROUPS as BLOOD_GROUPS,
+} from "../models/BloodStock.model.js";
+import StaffProfile from "../models/StaffProfile.model.js";
 import BloodRequest from "../../../src/models/BloodRequest.js";
 
 const fail = (res, status, message) =>
@@ -18,16 +18,14 @@ const ok = (res, message, data) =>
     data,
   });
 
-// Load the hospital assigned to the logged-in user from the database.
+// Load the hospital assigned to the logged-in staff from the database.
+// The hospital is NEVER taken from the client (query/body), only from StaffProfile.
 async function getAssignedHospital(req, res) {
-  const user = await User.findById(req.user.id)
-    .select("hospitalName hospitalLocation")
-    .lean();
+  const profile = await StaffProfile.findOne({
+    userId: req.user.id,
+  }).lean();
 
-  const hospitalName = String(user?.hospitalName || "").trim();
-  const hospitalLocation = String(user?.hospitalLocation || "").trim();
-
-  if (!hospitalName || !hospitalLocation) {
+  if (!profile) {
     fail(
       res,
       403,
@@ -36,10 +34,13 @@ async function getAssignedHospital(req, res) {
     return null;
   }
 
-  return { hospitalName, hospitalLocation };
+  return {
+    hospitalName: profile.hospitalName,
+    hospitalLocation: profile.hospitalLocation,
+  };
 }
 
-// GET /api/hospitals/me/stock
+// GET /api/bloodbank/me/stock
 export async function getMyHospitalStock(req, res, next) {
   try {
     const hospital = await getAssignedHospital(req, res);
@@ -64,7 +65,7 @@ export async function getMyHospitalStock(req, res, next) {
   }
 }
 
-// PATCH /api/hospitals/me/stock/:group
+// PATCH /api/bloodbank/me/stock/:group
 export async function updateMyHospitalStock(req, res, next) {
   try {
     const hospital = await getAssignedHospital(req, res);
@@ -117,7 +118,7 @@ export async function updateMyHospitalStock(req, res, next) {
   }
 }
 
-// GET /api/hospitals/me/requests
+// GET /api/bloodbank/me/requests
 export async function getMyHospitalRequests(req, res, next) {
   try {
     const hospital = await getAssignedHospital(req, res);
@@ -161,7 +162,7 @@ export async function getMyHospitalRequests(req, res, next) {
   }
 }
 
-// GET /api/hospitals/me/summary
+// GET /api/bloodbank/me/summary
 export async function getMyHospitalSummary(req, res, next) {
   try {
     const hospital = await getAssignedHospital(req, res);
@@ -223,15 +224,21 @@ export async function getMyHospitalSummary(req, res, next) {
   }
 }
 
-// GET /api/hospitals/staff (admin only)
+// GET /api/bloodbank/staff (admin only)
 export async function listStaff(_req, res, next) {
   try {
-    const staff = await User.find({ role: "staff" })
-      .select(
-        "name email phone role hospitalName hospitalLocation createdAt"
-      )
-      .sort({ name: 1 })
+    const profiles = await StaffProfile.find()
+      .populate("userId", "name email phone role createdAt")
+      .sort({ hospitalName: 1 })
       .lean();
+
+    const staff = profiles
+      .filter((p) => p.userId)
+      .map((p) => ({
+        ...p.userId,
+        hospitalName: p.hospitalName,
+        hospitalLocation: p.hospitalLocation,
+      }));
 
     return ok(res, "Staff list fetched", { staff });
   } catch (error) {
