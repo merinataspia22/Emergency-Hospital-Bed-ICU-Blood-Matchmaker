@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { getAdminOverview, getUsers, createUser, updateUser, deleteUser } from "../controllers/admin.controller.js";
+import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-// টোকেন বা প্রটেকশন ছাড়াই অ্যাডমিন রাউটগুলো ওপেন করা হলো যাতে 401 Unauthorized এরর না আসে
-router.get("/overview", getAdminOverview);
-router.get("/users", getUsers);
-router.post("/users", createUser);
-router.put("/users/:id", updateUser);
-router.delete("/users/:id", deleteUser);
+router.get("/overview", protect, authorizeRoles("admin"), getAdminOverview);
+router.get("/users", protect, authorizeRoles("admin"), getUsers);
+router.post("/users", protect, authorizeRoles("admin"), createUser);
+router.put("/users/:id", protect, authorizeRoles("admin"), updateUser);
+router.delete("/users/:id", protect, authorizeRoles("admin"), deleteUser);
 
 export default router;

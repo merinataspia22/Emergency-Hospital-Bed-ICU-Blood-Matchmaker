@@ -24,11 +24,11 @@ router.patch("/stock/:id", protect, authorizeRoles("staff", "admin"), updateBloo
 // Member 5: hospital dashboard routes
 router.use("/", member5Routes);
 
-// ---- Hospital CRUD (Authentication restrictions removed to prevent 401 errors) ----
+// ---- Hospital CRUD with Protection ----
 router.get("/", getHospitals);
 router.get("/:id", getHospitalById);
-router.post("/", createHospital);
-router.put("/:id", updateHospital);
-router.delete("/:id", deleteHospital);
+router.post("/", protect, authorizeRoles("admin"), createHospital);
+router.put("/:id", protect, authorizeRoles("admin"), updateHospital);
+router.delete("/:id", protect, authorizeRoles("admin"), deleteHospital);
 
 export default router;

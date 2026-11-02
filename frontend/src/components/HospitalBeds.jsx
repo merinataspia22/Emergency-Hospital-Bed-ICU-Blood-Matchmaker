@@ -15,7 +15,9 @@ import {
   Heart,
 } from "lucide-react";
 
-const API_BASE = "";
+const API_BASE = (
+  import.meta.env.VITE_API_URL || ""
+).replace(/\/+$/, "");
 
 const areas = [
   "Chawkbazar",
@@ -175,7 +177,7 @@ export default function HospitalBeds() {
     const filtered = hospitals.filter((h) => {
       if (q && !h.name.toLowerCase().includes(q)) return false;
       if (area && h.area !== area) return false;
-      if (dept && h.depts && !h.depts.includes(dept)) return false;
+      if (dept && !(h.depts || []).includes(dept)) return false;
       if (bedType === "general" && h.general <= 0) return false;
       if (bedType === "icu" && h.icu <= 0) return false;
       return true;
