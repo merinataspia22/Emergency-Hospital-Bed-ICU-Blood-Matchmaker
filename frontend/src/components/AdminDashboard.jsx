@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 
-const API_BASE = "";
+const API_BASE = (
+  import.meta.env.VITE_API_URL || ""
+).replace(/\/+$/, "");
 
 const trend = {
   labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -35,9 +37,9 @@ const navItems = [
 const initials = (n = "") =>
   n.replace("Dr. ", "").split(" ").map((w) => w[0]).slice(0, 2).join("");
 
-// Fixed: accessToken দিয়ে টোকেন রিড করার ব্যবস্থা করা হলো
+// Shared authentication token key updated
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || localStorage.getItem("token") || "";
+  const token = sessionStorage.getItem("bc_access_token_v1") || localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken") || localStorage.getItem("token") || "";
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -131,7 +133,7 @@ export default function AdminDashboard() {
   // Hospital Modal States
   const [showHospitalModal, setShowHospitalModal] = useState(false);
   const [editingHospitalId, setEditingHospitalId] = useState(null);
-  const [hospitalForm, setHospitalForm] = useState({ name: "", area: "", general: "", icu: "", phone: "" });
+  const [hospitalForm, setHospitalForm] = useState({ name: "", area: "", general: "", icu: "", phone: "", depts: ["Emergency", "General", "ICU"] });
 
   // User Modal States
   const [showUserModal, setShowUserModal] = useState(false);
@@ -166,10 +168,11 @@ export default function AdminDashboard() {
             id: h._id || h.id,
             name: h.name,
             loc: h.area || h.address || "Chattogram",
-            general: h.general || 10,
-            icu: h.icu || 2,
+            general: h.general ?? 0,
+            icu: h.icu ?? 0,
             phone: h.phone || "01700000000",
             donations: h.general ? h.general * 2 : 12,
+            depts: h.depts || ["Emergency", "General", "ICU"]
           }));
           setPartners(mappedPartners);
           setStats((prev) =>
@@ -275,6 +278,9 @@ export default function AdminDashboard() {
               if (s.label === "Completed Donations" && overview.completedDonations !== undefined) {
                 return { ...s, value: String(overview.completedDonations) };
               }
+              if (s.label === "Hospital Partners" && overview.hospitalPartners !== undefined) {
+                return { ...s, value: String(overview.hospitalPartners) };
+              }
               return s;
             })
           );
@@ -359,7 +365,7 @@ export default function AdminDashboard() {
         alert(editingHospitalId ? "Hospital updated successfully!" : "Hospital added successfully!");
         setShowHospitalModal(false);
         setEditingHospitalId(null);
-        setHospitalForm({ name: "", area: "", general: "", icu: "", phone: "" });
+        setHospitalForm({ name: "", area: "", general: "", icu: "", phone: "", depts: ["Emergency", "General", "ICU"] });
         fetchHospitals();
       } else {
         alert("Operation failed");
@@ -706,7 +712,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={() => {
                       setEditingHospitalId(null);
-                      setHospitalForm({ name: "", area: "", general: "", icu: "", phone: "" });
+                      setHospitalForm({ name: "", area: "", general: "", icu: "", phone: "", depts: ["Emergency", "General", "ICU"] });
                       setShowHospitalModal(true);
                     }}
                     className="rounded-lg bg-[#d90f1f] px-3 py-1.5 text-xs font-semibold text-white"
@@ -741,7 +747,7 @@ export default function AdminDashboard() {
                               <button
                                 onClick={() => {
                                   setEditingHospitalId(p.id);
-                                  setHospitalForm({ name: p.name, area: p.loc, general: p.general, icu: p.icu, phone: p.phone });
+                                  setHospitalForm({ name: p.name, area: p.loc, general: p.general, icu: p.icu, phone: p.phone, depts: p.depts || ["Emergency", "General", "ICU"] });
                                   setShowHospitalModal(true);
                                 }}
                                 className="rounded bg-blue-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-blue-700"

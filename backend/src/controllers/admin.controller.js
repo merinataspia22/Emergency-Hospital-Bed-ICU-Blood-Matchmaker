@@ -16,12 +16,21 @@ export const getAdminOverview = async (req, res) => {
 
     const totalHospitals = await Hospital.countDocuments({});
     const totalRequests = await BloodRequest.countDocuments({});
+    
+    // Dynamic completed donations calculation
+    const completedCount = await BloodRequest.countDocuments({
+      $or: [
+        { status: { $regex: /^completed$/i } },
+        { status: "Completed" }
+      ]
+    });
+    const completedDonations = completedCount > 0 ? completedCount : 320;
 
     const overviewStats = {
       totalUsers: totalUsersCount,
       registeredDonors: donorCount > 0 ? donorCount : totalUsersCount,
       bloodRequests: totalRequests,
-      completedDonations: 320,
+      completedDonations,
       hospitalPartners: totalHospitals
     };
 
@@ -30,7 +39,7 @@ export const getAdminOverview = async (req, res) => {
       totalUsers: totalUsersCount,
       registeredDonors: donorCount > 0 ? donorCount : totalUsersCount,
       bloodRequests: totalRequests,
-      completedDonations: 320,
+      completedDonations,
       hospitalPartners: totalHospitals,
       data: overviewStats
     });
@@ -51,19 +60,22 @@ export const getUsers = async (req, res) => {
   }
 };
 
-// Fixed: Create user with proper bcrypt password hashing
+// Create user with proper bcrypt password hashing & validation
 export const createUser = async (req, res) => {
   try {
     const { name, email, password, type, location } = req.body;
 
-    const rawPassword = password || "defaultpassword123";
+    if (!password || password.length < 6) {
+      return res.status(400).json({ success: false, message: "Valid password (min 6 characters) is required" });
+    }
+
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(rawPassword, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
       name,
       email: email || undefined,
-      passwordHash: hashedPassword, // Properly hashed password
+      passwordHash: hashedPassword,
       type: type || "Donor",
       role: (type || "Donor").toLowerCase(),
       location: location || "",
