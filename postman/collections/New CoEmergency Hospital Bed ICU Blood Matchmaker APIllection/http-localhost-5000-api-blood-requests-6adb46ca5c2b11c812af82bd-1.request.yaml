@@ -1,0 +1,13 @@
+$kind: http-request
+name: http://localhost:5000/api/blood-requests/6adb46ca5c2b11c812af82bd
+description: ""
+url: http://localhost:5000/api/blood-requests/6adb46ca5c2b11c812af82bd
+method: PATCH
+body:
+  type: json
+  content: '{ "units": 1 }'
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_0yg2}}"
+order: 3000

@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: fe46ec00-5bd9-4815-8ccb-5e69d82107c4
+
+localResources:
+  collections:
+    - ../backend/member1-taspia/postman/BloodConnect_Member1.postman_collection.json

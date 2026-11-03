@@ -1,0 +1,33 @@
+$kind: http-request
+name: http://localhost:5000/api/blood-requests
+description: ""
+url: http://localhost:5000/api/blood-requests
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"patientName\": \"Karim Uddin\",\r
+
+    \  \"bloodGroup\": \"A+\",\r
+
+    \  \"units\": 2,\r
+
+    \  \"urgency\": \"Urgent\",\r
+
+    \  \"hospitalName\": \"Chattogram Medical College Hospital\",\r
+
+    \  \"hospitalLocation\": \"Panchlaish, Chattogram\",\r
+
+    \  \"contact\": \"01712345678\",\r
+
+    \  \"dateNeeded\": \"2026-11-15\",\r
+
+    \  \"details\": \"Surgery scheduled\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{json_web_token_0yg2}}"
+order: 1000
